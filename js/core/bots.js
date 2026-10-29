@@ -68,12 +68,14 @@ function goalsFor(s, p) {
   const goals = [];
   const missing = missingTopics(s, p);
   if (p.fragments < GOAL_FRAGMENTS) {
-    for (const isl of BOARD.islands) if (!p.beaten.includes(isl.index) && !s.mods.removed.includes(isl.ids.a2)) goals.push(isl.ids.a2);
+    for (const isl of BOARD.islands) if (!p.beaten.includes(isl.index) && !s.mods.removed.includes(isl.ids.g)) goals.push(isl.ids.g);
   }
   if (missing.length && (p.fragments >= 3 || !goals.length)) {
     for (const n of NODES) if (n.type === 'topic' && !s.mods.removed.includes(n.id) && missing.includes(effectiveTopic(s, n.id))) goals.push(n.id);
   }
-  if (p.style === 'politician' && p.influence >= 9) for (const isl of BOARD.islands) goals.push(isl.ids.a3);
+  const open = (id) => !s.mods.removed.includes(id);
+  if (p.style === 'politician' && p.influence >= 9) for (const n of NODES) if (n.type === 'market' && open(n.id)) goals.push(n.id);
+  if (p.style === 'saboteur' && p.cards.length < 2) for (const n of NODES) if (n.type === 'archive' && open(n.id)) goals.push(n.id);
   return goals.length ? goals : [BOARD.hub];
 }
 
@@ -134,7 +136,7 @@ export function botAction(s, pid, { timeout = false } = {}) {
       // Zeitsprung direkt ins Portal
       if (isEligible(s, p) && p.cards.includes('t_choose')) {
         const d = distancesTo(s, [BOARD.hub]).get(p.pos);
-        if (d && d <= 6) return me('playCard', { card: 't_choose', value: d });
+        if (d && d >= 2 && d <= 12) return me('playCard', { card: 't_choose', value: d });
       }
       if (!s.ctx.cardPlayed && p.cards.length) {
         const targets = s.players.filter((o) => o.id !== pid && o.id !== p.ally && !hasShield(s, o));

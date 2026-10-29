@@ -117,6 +117,52 @@ export function windowTexture(lit = '#ffd27a', base = '#1b2033', cols = 4, rows 
   return t;
 }
 
+// Symbol-Atlas: alle Feldsymbole in einer Textur (8 × 8 Zellen), damit alle Felder in EINEM Draw-Call gerendert werden
+export function iconAtlas(entries) {
+  const cells = 8, size = 128;
+  const [c, g] = canvas(cells * size, cells * size);
+  const index = new Map();
+  entries.forEach(({ key, symbol, bg, fg = '#05060f', dim = false }, i) => {
+    const col = i % cells, row = Math.floor(i / cells);
+    const cx = col * size + size / 2, cy = row * size + size / 2;
+    g.save();
+    g.globalAlpha = dim ? 0.35 : 1;
+    g.fillStyle = bg;
+    g.beginPath(); g.arc(cx, cy, size / 2 - 4, 0, Math.PI * 2); g.fill();
+    g.lineWidth = 6; g.strokeStyle = 'rgba(255,255,255,0.85)'; g.stroke();
+    g.fillStyle = fg;
+    g.font = '700 64px "Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(symbol, cx, cy + 6);
+    g.restore();
+    // UV-Ursprung liegt unten links (flipY), Zeile 0 ist oben
+    index.set(key, [col / cells, 1 - (row + 1) / cells]);
+  });
+  const t = finish(c);
+  t.generateMipmaps = true;
+  return { texture: t, index, scale: 1 / cells };
+}
+
+// Senkrechte Wasserschlieren für Wasserfälle
+export function waterTexture(color) {
+  const key = `water:${color}`;
+  if (cache.has(key)) return cache.get(key);
+  const [c, g] = canvas(64, 256);
+  g.clearRect(0, 0, 64, 256);
+  for (let i = 0; i < 26; i++) {
+    const x = (i * 37) % 64, w = 2 + (i % 4);
+    const grd = g.createLinearGradient(0, 0, 0, 256);
+    grd.addColorStop(0, 'rgba(255,255,255,0)');
+    grd.addColorStop(0.3 + (i % 5) * 0.08, color);
+    grd.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grd; g.globalAlpha = 0.35 + (i % 3) * 0.2;
+    g.fillRect(x, 0, w, 256);
+  }
+  const t = finish(c, { repeat: true });
+  cache.set(key, t);
+  return t;
+}
+
 function roundRect(g, x, y, w, h, r) {
   g.beginPath();
   g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);

@@ -1,11 +1,13 @@
 # ⚡ ZEITSTURM
 
-**Das 3D-Gesellschaftsspiel um die Zeitlinie** – für 1 bis 4 Spieler, online mit Freunden (Raumcode) oder gemeinsam an einem Handy. Vier Zeitreisende ringen auf sechs schwebenden Epochen-Inseln um Wissen, Einfluss und Zeitfragmente. Wer zuerst alle Sternfarben und 5 Fragmente besitzt und das Zeitportal erreicht, gewinnt.
+**Das 3D-Gesellschaftsspiel um die Zeitlinie** – für 1 bis 4 Spieler, online mit Freunden (Raumcode) oder gemeinsam an einem Handy. Vier Zeitreisende ringen auf einem schwebenden Archipel aus sechs Epochen-Inseln und sechs Nebeninseln um Wissen, Einfluss und Zeitfragmente. Das Brett hat **175 Felder und 19 Kreuzungen**. Wer zuerst alle Sternfarben und 5 Fragmente besitzt und das Zeitportal erreicht, gewinnt.
+
+**Neu in Version 2:** doppelt so großes, verzweigteres Brett mit Nebeninseln (Inselhüpfen), Aussichtspfaden und Dreifach-Kreuzungen. Dazu kommen zwei Würfel mit Pasch-Bonus und die neuen Felder **Archiv** und **Zeitstrom**. Optisch neu sind das animierte Wolkenmeer, Inseln mit Gelände und Bewuchs, Wasserfälle, das Portal mit Zeituhr, Lichtspuren der Figuren, Sternschnuppen und eine Kamerafahrt zum Spielstart. Wer ein Feld antippt, sieht, was dort passiert. Gerendert wird mit Instancing, damit das große Brett auf dem Handy flüssig bleibt.
 
 - **Mobile-first:** gebaut für Handys im Hoch- und Querformat (Touch, große Buttons, Bottom-Sheets, Vibration), läuft genauso am Desktop. Installierbar als App (PWA, Vollbild, offline spielbar für lokale Partien).
 - **Reine Web-App ohne Server:** läuft auf GitHub Pages. Online-Multiplayer per WebRTC (PeerJS), der Host rechnet die Partie.
 - **Alles selbst erzeugt:** 3D-Modelle, Texturen, Icons, Musik und Soundeffekte entstehen prozedural im Browser. Keine externen Assets, keine Lizenzprobleme.
-- **385 geprüfte Fragen** in 6 Themen und 5 Formaten, 40 Ereignisse, 30 Anträge, 30 Karten, 3 Musik-Minispiele.
+- **385 geprüfte Fragen** in 6 Themen und 5 Formaten, 40 Ereignisse, 30 Anträge, 30 Karten, 3 Musik-Minispiele, 10 Feldtypen.
 
 ---
 
@@ -62,7 +64,7 @@ Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert auslief
    Bei Gleichstand entscheiden Fragmente, dann Sterne, dann Einfluss.
 
 ### Ablauf eines Zuges
-1. **Würfeln oder Karte spielen.** Vor dem Würfeln darfst du eine Karte spielen. Zeitsprung-Karten ersetzen den Wurf.
+1. **Würfeln oder Karte spielen.** Gewürfelt wird mit **zwei Würfeln** (2–12 Felder). Ein **Pasch** bringt sofort eine Bonuskarte. Vor dem Würfeln darfst du eine Karte spielen. Zeitsprung-Karten ersetzen den Wurf.
 2. **Bewegen.** Ziehe Feld für Feld in Pfeilrichtung (die Wege „fließen“ sichtbar). An **Kreuzungen** wählst du frei – per Button oder durch Antippen eines leuchtenden Felds.
 3. **Feld-Aktion** des Feldes, auf dem du stehen bleibst.
 4. **Verhandeln (optional):** Handel anbieten (mit Gegenangebot), Bündnis anbieten oder Verrat begehen.
@@ -79,9 +81,13 @@ Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert auslief
 | 🂠 **Karten** | Höchstens 5 auf der Hand. |
 | ★ **Ansehen** (0–10, Start 5) | Ab 8 zählt deine Grundstimme doppelt, bei 2 oder weniger gar nicht. |
 
-### Die 8 Feldtypen
+### Die Feldtypen
+Neben den acht Feldtypen aus dem Auftrag gibt es zwei neue: **Archiv** und **Zeitstrom**. Wer ein Feld auf dem Brett antippt, bekommt seine Wirkung angezeigt.
+
 | Feld | Wirkung |
 |---|---|
+| 📚 **Archiv** (neu) | Ziehe eine Karte und erhalte 1 Einfluss. |
+| ≈ **Zeitstrom** (neu) | Liegt auf dem kurzen Fallenweg und trägt dich sofort bis zum Ausgang der Insel. Dort wird das Feld ausgeführt. |
 | **Themenfeld** (6 Farben) | Quizfrage zum Thema; Schwierigkeit steigt von der Antike (leicht) bis zur Zukunft (schwer). Richtig: **Stern oder Einfluss** (1 + Schwierigkeit) nach Wahl. Danach wird immer die Erklärung eingeblendet. |
 | ⚡ **Ereignisfeld** | Historisches/politisches Ereignis, das **alle** betrifft (40 verschiedene). |
 | ⚔ **Duellfeld** | Fordere einen Gegner heraus: Thema und Einsatz (Einfluss oder Fragment) wählst du. Beide beantworten dieselbe Frage; bei Gleichstand entscheidet eine Schätzfrage. Verlierer zahlt; der Sieger erhält zusätzlich 2 Einfluss und eine Karte. Verbündete und Spieler mit Schild können nicht herausgefordert werden. |
@@ -91,8 +97,13 @@ Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert auslief
 | ◎ **Zeitportal** | Abkürzung in eine Epoche deiner Wahl. Risiko beim Sprung: 1/6 Zeitsturm-Strafe (−3 Einfluss, −1 Karte), 1/6 zufälliges Ziel. |
 | ♛ **Epochen-Herausforderung** | Wächter jeder Epoche mit eigenem Prüfungstyp: Wissensrennen (Antike, Weltkriegs-Ära), Reihenfolge-Rätsel (Mittelalter, Kalter Krieg), Zuordnungs-Prüfung (Industrialisierung, Zukunft). 2 von 3 richtig (Schwer: 3 von 3) → **Zeitfragment** + 2 Einfluss. Jeder Wächter kann von jedem Spieler einmal besiegt werden. |
 
-### Das Brett und seine Verzweigungen
-Sechs Inseln (Antike, Mittelalter, Industrialisierung, Weltkriegs-Ära, Kalter Krieg, Zukunft) liegen um das Zeitportal. Jede Insel hat zwei echte Entscheidungen: Bei **Kreuzung 1** gibt es den **sicheren langen Weg** (Wächter + Markt, Belohnung) oder den **riskanten Kurzweg** (Duell oder Zeitportal, Falle). Bei **Kreuzung 2** geht es über die **Brücke** zur nächsten Epoche oder über die **Speiche** direkt zum Zeitportal, von dem aus jede Insel erreichbar ist. Insgesamt sind es 13 Kreuzungen. Das Parlament kann neue Brücken bauen (dadurch entstehen weitere Kreuzungen), Brücken und Speichen sperren oder Felder umfärben.
+### Das Brett: ein Archipel mit 175 Feldern
+Sechs große Epochen-Inseln (Antike, Mittelalter, Industrialisierung, Weltkriegs-Ära, Kalter Krieg, Zukunft) liegen um das Zeitportal, dazwischen schweben sechs Nebeninseln. Jede Epoche hat **drei echte Entscheidungen**:
+1. **Am Eingang:** der **lange Weg** über den Inselbogen mit Archiv, Wächter ♛, Markt und Parlament (Belohnung) oder der **kurze Fallenweg** mit Duell, Zeitportal, Ereignis und Zeitstrom (Risiko).
+2. **Auf dem Bogen:** der **Aussichtspfad** durch das Inselinnere, ein Umweg mit Konzert, Themenfeld und Archiv.
+3. **Am Ausgang (dreifach):** die **Brücke** zur nächsten Epoche, das **Inselhüpfen** über die Nebeninsel mit Handelsposten, Inselrat (Parlament), Konzert und Archiv oder die **Speiche** direkt zum Zeitportal, von dem aus jede Insel erreichbar ist.
+
+Insgesamt gibt es 19 Kreuzungen. Das Parlament kann neue Brücken bauen (dadurch entstehen weitere Kreuzungen), Brücken und Speichen sperren oder die Themenfelder einer Epoche umfärben.
 
 ### Parlament (Politik-Mechanik)
 - Alle stimmen gleichzeitig und **geheim** ab: Ja / Nein / Enthaltung, dazu ein **Gebot an Einfluss** als zusätzliche Stimmen. Gebote werden bezahlt (sie fließen in einen Fonds) und erst nach der Abstimmung aufgedeckt.
@@ -109,7 +120,7 @@ Zwei Spieler können für **5 Runden** ein Bündnis schließen. Dann gilt: Beant
 |---|---|
 | 🃏 **Joker** (während Fragen) | 50/50 · Fragentausch · Zweite Chance · Doppelt oder nichts · Zeitlupe (+30 s) |
 | 💣 **Sabotage** | Einflussraub (bis 4) · Taschendieb · Zeitschleife (zurück an den Inselanfang) · Zeitstarre (aussetzen) · Gedächtnislücke (−1 Stern) |
-| ⏩ **Zeitsprung** (statt Würfeln) | Kurzsprung (3) · Weitsprung (6) · Präzisionssprung (1–6 wählen) · Epochenwechsel · Doppelwurf |
+| ⏩ **Zeitsprung** (statt Würfeln) | Kurzsprung (4) · Weitsprung (10) · Präzisionssprung (2–12 wählen) · Epochenwechsel · Dreifachwurf (3 Würfel) |
 | 🛡 **Schutzschild** | Schutzschild · Großer Schild · Spiegelschild · Sturmanker · Bündnisschild |
 | ✋ **Veto** (bei Abstimmungen) | Veto · Super-Veto · Doppelstimme · Umkehr · Vertagung |
 | 🕵 **Spion** | Blick in die Karten · Kopie · Diebstahl · Aufklärung (2 Karten ziehen) · Dossier |
@@ -117,8 +128,8 @@ Zwei Spieler können für **5 Runden** ein Bündnis schließen. Dann gilt: Beant
 **Kopfgeld:** Wer mit einer Sabotage-Karte den aktuell Führenden trifft, erhält zusätzlich 3 Einfluss.
 
 ### Zeitsturm und Comeback
-- Nach **zwei Dritteln der Runden** (Standard: ab Runde 21) bricht der **Zeitsturm** los. Jede Runde zerfallen 2 Felder (sie bleiben begehbar, lösen aber nichts mehr aus), Duell-Einsätze verdoppeln sich, richtige Antworten bringen +1 Einfluss, und jede zweite Runde kostet der Sturm 1 Einfluss.
-- **Rückenwind:** Wer mindestens 5 Punkte hinter dem Führenden liegt, würfelt zweimal (der bessere Wurf zählt) und erhält +1 Einfluss pro Zug.
+- Nach **zwei Dritteln der Runden** (Standard: ab Runde 21) bricht der **Zeitsturm** los. Jede Runde zerfallen 4 Felder (sie bleiben begehbar, lösen aber nichts mehr aus), Duell-Einsätze verdoppeln sich, richtige Antworten bringen +1 Einfluss, und jede zweite Runde kostet der Sturm 1 Einfluss.
+- **Rückenwind:** Wer mindestens 5 Punkte hinter dem Führenden liegt, würfelt mit drei Würfeln (die besten zwei zählen) und erhält +1 Einfluss pro Zug.
 
 ### Die Themen
 Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geografie & Natur 🌍 · Film & Popkultur 🎬. Es gibt je 63 bis 65 Fragen, insgesamt 385. Fragenformate: Multiple Choice, Wahr/Falsch, Schätzfrage (Toleranzbereich zählt als richtig), Reihenfolge (antippen in der richtigen Reihenfolge) und Zuordnung (links und rechts antippen). Jede Frage hat Schwierigkeit 1–3, eine Epochen-Zuordnung und eine Erklärung. Fragen werden pro Partie ohne Wiederholung gezogen. Erst wenn ein Thema komplett aufgebraucht ist, wird es neu gemischt.
@@ -133,6 +144,7 @@ Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geo
 | Zoomen / verschieben | zwei Finger | Mausrad / rechte Maustaste |
 | Folgen ↔ Übersicht | 🎥 | 🎥 |
 | Weg wählen | Button oder leuchtendes Feld antippen | ebenso |
+| Feld-Info | beliebiges Feld antippen | anklicken |
 | Spielerdetails | Spieler-Chip antippen | anklicken |
 | Protokoll, Chat, Regeln, Menü | 📜 💬 ❔ ☰ | ebenso |
 
@@ -174,13 +186,13 @@ node tools/check.mjs
 
 Prüft die Syntax aller Module, fehlende Übersetzungsschlüssel, das Format aller Fragen und die Mindestmengen an Inhalten.
 
-**Ergebnis der finalen Simulation (5 × 1.200 = 6.000 Partien, Seeds 2026/4242/999/31337/7):** alle Partien beendet, **0 Abstürze, 0 Hänger, 0 ungültige Aktionen**. Etwa 57 % enden per Portal, 43 % per Wertung; ein Portal-Sieg fällt im Schnitt in Runde 25.
+**Ergebnis der finalen Simulation mit dem Archipel-Brett (5 × 1.200 = 6.000 Partien, Seeds 2026/4242/999/31337/7):** alle Partien beendet, **0 Abstürze, 0 Hänger, 0 ungültige Aktionen**. Etwa 72 % enden per Portal, 28 % per Wertung; ein Portal-Sieg fällt im Schnitt in Runde 24.
 
 | Spielstil (Bot) | Siegfaktor (1,00 = exakt fair), Mittel über 5 Seeds | Spannweite |
 |---|---|---|
-| Wissens-Sammler | 0,93 | 0,87–0,96 |
-| Politiker | 1,06 | 1,02–1,10 |
-| Saboteur | 1,01 | 0,95–1,04 |
+| Wissens-Sammler | 1,05 | 0,99–1,08 |
+| Politiker | 0,97 | 0,91–1,03 |
+| Saboteur | 0,98 | 0,92–1,02 |
 
 Kein Stil dominiert, alle drei gewinnen regelmäßig. Auch der Vorteil der Startreihenfolge ist gering (Faktor 0,9–1,1).
 
@@ -214,6 +226,15 @@ Der Auftrag ließ einige Punkte offen. Hier ist festgehalten, wie ich sie entsch
 20. **Musik:** Jede Epoche hat ein deterministisch „komponiertes“ Stück (eigene Tonleiter, eigenes Tempo, eigene Instrumente und Rhythmen). Bei Duellen und Herausforderungen steigt die Spannung (schneller, mehr Percussion). Während der Minispiele wird die Musik abgesenkt.
 21. **Barrierearm:** Jede Themenfarbe hat zusätzlich ein Symbol, jede Spielerfarbe eine Form (● ▲ ■ ◆ ★ ✚), die Schrift ist groß (Inter), Kontraste sind hoch, und „Bewegung reduzieren“ des Systems wird respektiert.
 22. **Sprachen:** Alle Texte liegen in `js/i18n/de.js`, die Fragen unter `js/data/de/`. Eine neue Sprache braucht nur eine weitere Datei mit denselben Schlüsseln und einen Fragenordner.
+
+### Version 2 (größeres Brett und Extras)
+23. **Doppeltes Brett als Archipel:** Statt die sechs Inseln nur zu vergrößern, bekommt jede Epoche einen langen und einen kurzen Weg, einen Aussichtspfad und am Ausgang eine Dreifach-Wahl. Zwischen den Epochen liegen sechs Nebeninseln zum Inselhüpfen. So entstehen 175 Felder (vorher 79) und 19 Kreuzungen (vorher 13), und die Entscheidungen bleiben echte Abwägungen zwischen Zeit, Risiko und Belohnung.
+24. **Zwei Würfel:** Ein doppelt so großes Brett würde mit einem Würfel jede Partie doppelt so lang machen. Zwei Würfel halten das Tempo und führen zu mehr Kreuzungen pro Zug. Als Extra bringt ein Pasch eine Karte. Rückenwind bedeutet jetzt drei Würfel, von denen die besten zwei zählen, und die Zeitsprung-Karten wurden entsprechend skaliert.
+25. **Zwei neue Feldtypen:** Das **Archiv** liefert Karten-Nachschub, besonders für Saboteure. Der **Zeitstrom** ist eine Belohnung innerhalb des Fallenwegs. Beide brauchen keine zusätzliche Entscheidung und halten das Spieltempo hoch.
+26. **Inselrat:** Auf dem größeren Brett wurden Parlamentsfelder in der Simulation zu selten betreten. Deshalb hat jede Nebeninsel ein zusätzliches Parlamentsfeld, und Anträge kommen wieder etwa doppelt so oft zur Abstimmung.
+27. **Umfärben** wirkt nur auf die Hauptinsel einer Epoche, damit ein einzelner Antrag nicht 11 Felder auf einmal ändert.
+28. **Performance:** Alle 174 Felder werden als InstancedMesh gezeichnet (Körper, Leuchtrand und Symbol aus einem Symbol-Atlas, also 3 Draw-Calls). Statische Wege und statisches Dekor werden pro Material zusammengeführt, und die Schattenkamera folgt dem Kamerafokus (scharfe Schatten trotz großem Brett).
+29. **Versionierung:** Spielstände und Online-Räume tragen die Brett-Version im Schlüssel bzw. in der Peer-ID, sodass alte Spielstände nicht mit dem neuen Brett kollidieren. Der Service Worker lädt eigene Dateien jetzt „network-first“, damit Updates sofort ankommen; offline greift weiter der Cache.
 
 ---
 

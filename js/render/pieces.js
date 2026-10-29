@@ -121,7 +121,7 @@ export class Pieces {
 
   setActive(i) { this.active = i; }
 
-  async walk(i, path, onStep) {
+  async walk(i, path, onStep, speed = 1) {
     const it = this.items[i];
     if (!it) return;
     it.moving = true;
@@ -131,7 +131,8 @@ export class Pieces {
       const dir = to.clone().sub(from);
       if (dir.lengthSq() > 0.01) it.body.rotation.y = Math.atan2(dir.x, dir.z);
       const dist = from.distanceTo(to);
-      const dur = Math.min(0.55, 0.2 + dist * 0.022);
+      // Lange Würfe (2 Würfel) zügig, kurze Wege gemütlich animieren
+      const dur = Math.min(0.5, 0.17 + dist * 0.016) * speed * (path.length > 8 ? 0.8 : 1);
       await this.world.tween(dur, (e) => {
         it.group.position.lerpVectors(from, to, e);
         it.group.position.y += Math.sin(e * Math.PI) * (0.9 + dist * 0.05);

@@ -1,6 +1,7 @@
 // Online-Multiplayer über WebRTC (PeerJS). Kein eigener Server: Der öffentliche PeerJS-Vermittlungsdienst
 // stellt nur die Verbindung her, danach laufen die Daten direkt zwischen den Geräten.
-const PREFIX = 'zeitsturm-v1-';
+// Die Peer-ID enthält die Spielversion: Geräte mit altem und neuem Brett landen nie im selben Raum
+const PREFIX = 'zeitsturm-v2-';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 export function makeCode() {

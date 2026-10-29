@@ -1,7 +1,7 @@
 // ZEITSTURM Regel-Engine.
 // Reiner Zustandsautomat: createGame() erzeugt einen Zustand, applyAction() verändert ihn und liefert Ereignisse
 // für Animationen/UI. Kein DOM, kein Netzwerk – läuft im Browser (Host/Hot-Seat) und in Node (Simulation).
-import { TOPICS, EPOCHS, EPOCH_INFO, GOAL_FRAGMENTS } from './constants.js';
+import { TOPICS, EPOCHS, EPOCH_INFO, GOAL_FRAGMENTS, STATE_VERSION } from './constants.js';
 import { buildBoard } from './board.js';
 import { CARDS, EVENTS, MOTIONS, buildCardDeck } from './content.js';
 import { nextRandom, randInt, shuffle, pick } from './rng.js';
@@ -31,7 +31,7 @@ function emit(type, data = {}) { EV.push({ type, ...data }); }
 // ---------------------------------------------------------------- Erzeugung
 export function createGame({ players, settings = {}, seed = 1 }) {
   const s = {
-    v: 1,
+    v: STATE_VERSION,
     seed,
     rng: seed >>> 0,
     settings: { ...DEFAULT_SETTINGS, ...settings },
@@ -43,7 +43,8 @@ export function createGame({ players, settings = {}, seed = 1 }) {
       shieldUntil: 0, reflect: false, stormImmune: false, skip: false, beaten: [],
       ally: null, allyUntil: 0,
       stats: { correct: 0, wrong: 0, duelsWon: 0, duelsLost: 0, betrayals: 0, votesWon: 0, bidTotal: 0,
-        motionsPassed: 0, cardsPlayed: 0, sabotages: 0, steps: 0, music: 0, challenges: 0, trades: 0, influenceMax: 4 },
+        motionsPassed: 0, cardsPlayed: 0, sabotages: 0, steps: 0, music: 0, challenges: 0, trades: 0, influenceMax: 4,
+        doubles: 0, archives: 0, streams: 0 },
     })),
     round: 1,
     turnCount: 0,
@@ -80,7 +81,8 @@ export function hasShield(s, p) { return p.shieldUntil >= s.round; }
 
 export function effectiveTopic(s, nodeId) {
   const node = NODES[nodeId];
-  let t = s.mods.recolor[node.island] && node.type === 'topic' ? s.mods.recolor[node.island] : node.topic;
+  // Umfärbe-Anträge wirken auf die Themenfelder der Hauptinsel einer Epoche
+  let t = s.mods.recolor[node.island] && node.type === 'topic' && node.area === 'main' ? s.mods.recolor[node.island] : node.topic;
   const act = activeTopics(s);
   if (!act.includes(t)) t = act[(TOPICS.indexOf(t) + node.id) % act.length];
   return t;
@@ -236,7 +238,7 @@ function roundStart(s) {
   if (s.rules.quizBonusUntil && s.rules.quizBonusUntil < s.round) s.rules.quizBonusUntil = 0;
   if (stormActive(s)) {
     if (s.round === s.stormRound + 1) emit('stormBegins');
-    removeFields(s, 2);
+    removeFields(s, 4);
     for (const p of s.players) if (!p.stormImmune && p.influence > 0 && s.round % 2 === 0) addInf(s, p, -1);
   }
 }
@@ -245,7 +247,7 @@ function removeFields(s, n) {
   const occupied = new Set(s.players.map((p) => p.pos));
   const cand = NODES.filter((nd) => nd.type !== 'hub' && nd.type !== 'challenge' && nd.next.length < 2
     && !s.mods.removed.includes(nd.id) && !occupied.has(nd.id)).map((nd) => nd.id);
-  const picked = shuffle(s, cand).slice(0, Math.min(n, Math.max(0, 34 - s.mods.removed.length)));
+  const picked = shuffle(s, cand).slice(0, Math.min(n, Math.max(0, 70 - s.mods.removed.length)));
   if (!picked.length) return;
   s.mods.removed.push(...picked);
   emit('fieldsRemoved', { nodes: picked });
@@ -293,7 +295,7 @@ function finishMove(s, p) {
   land(s, p);
 }
 
-function land(s, p) {
+function land(s, p, depth = 0) {
   const node = NODES[p.pos];
   emit('land', { player: p.id, node: node.id, field: node.type });
   if (s.mods.removed.includes(node.id)) { emit('voidField', { player: p.id }); return toPost(s, p); }
@@ -316,6 +318,25 @@ function land(s, p) {
       addInf(s, p, 1);
       emit('portalClosed', { player: p.id });
       return toPost(s, p);
+    case 'archive': {
+      // Archiv: eine Karte und 1 Einfluss
+      const card = drawCard(s, p);
+      addInf(s, p, 1);
+      p.stats.archives++;
+      emit('archive', { player: p.id, card });
+      return toPost(s, p);
+    }
+    case 'stream': {
+      // Zeitstrom: trägt die Figur bis zum Ziel des Stroms, dort wird das Feld ausgeführt
+      if (depth > 2 || node.streamTo == null) return toPost(s, p);
+      const path = [node.id];
+      let cur = node.id;
+      while (cur !== node.streamTo && path.length < 12) { cur = NODES[cur].next[0]; path.push(cur); }
+      p.pos = node.streamTo;
+      p.stats.streams++;
+      emit('stream', { player: p.id, path });
+      return land(s, p, depth + 1);
+    }
     default: return toPost(s, p);
   }
 }
@@ -729,10 +750,14 @@ function playTurnCard(s, p, a) {
       land(s, p);
       return null;
     }
-    let steps = 3;
-    if (kind === 't_six') steps = 6;
-    else if (kind === 't_choose') steps = Math.max(1, Math.min(6, a.value | 0 || 1));
-    else if (kind === 't_double') { const r1 = randInt(s, 1, 6), r2 = randInt(s, 1, 6); steps = r1 + r2; emit('roll', { player: p.id, values: [r1, r2], total: steps }); }
+    let steps = 4;
+    if (kind === 't_six') steps = 10;
+    else if (kind === 't_choose') steps = Math.max(2, Math.min(12, a.value | 0 || 2));
+    else if (kind === 't_double') {
+      const values = [randInt(s, 1, 6), randInt(s, 1, 6), randInt(s, 1, 6)];
+      steps = values[0] + values[1] + values[2];
+      emit('roll', { player: p.id, values, total: steps });
+    }
     s.pending = { kind: 'moving', player: p.id };
     beginMove(s, p, steps);
     return null;
@@ -836,6 +861,8 @@ export function awards(s) {
     musician: best((p) => p.stats.music),
     walker: best((p) => p.stats.steps),
     tycoon: best((p) => p.stats.influenceMax),
+    lucky: best((p) => p.stats.doubles || 0),
+    archivist: best((p) => p.stats.archives || 0),
   };
 }
 
@@ -863,12 +890,20 @@ function dispatch(s, a) {
   switch (pd.kind) {
     case 'turn':
       if (a.type === 'roll') {
-        let v = randInt(s, 1, 6);
-        const values = [v];
-        if (s.ctx.tailwind) { const v2 = randInt(s, 1, 6); values.push(v2); v = Math.max(v, v2); }
-        emit('roll', { player: p.id, values, total: v, tailwind: s.ctx.tailwind });
+        // Zwei Würfel; Rückenwind: drei Würfel, die besten zwei zählen. Pasch bringt eine Karte.
+        const values = [randInt(s, 1, 6), randInt(s, 1, 6)];
+        if (s.ctx.tailwind) values.push(randInt(s, 1, 6));
+        const best = values.slice().sort((x, y) => y - x).slice(0, 2);
+        const total = best[0] + best[1];
+        const doubles = best[0] === best[1];
+        emit('roll', { player: p.id, values, total, tailwind: s.ctx.tailwind, doubles });
+        if (doubles) {
+          const card = drawCard(s, p);
+          p.stats.doubles++;
+          emit('doubles', { player: p.id, card });
+        }
         s.pending = { kind: 'moving', player: p.id };
-        beginMove(s, p, v);
+        beginMove(s, p, total);
         return null;
       }
       if (a.type === 'playCard') return playTurnCard(s, p, a);
@@ -1062,10 +1097,16 @@ export function viewFor(s, playerId) {
   if (v.pending?.kind === 'duel') {
     for (const k of Object.keys(v.pending.answers)) if (Number(k) !== playerId) v.pending.answers[k] = '?';
   }
-  v.log = v.log.map((e) => (e.type === 'peek' && e.player !== playerId ? { ...e, cards: [] } : e));
+  v.log = sanitizeEvents(v.log, playerId);
   return v;
 }
 
+// Verdeckte Informationen anderer Spieler entfernen (eingesehene/gezogene Karten)
 export function sanitizeEvents(events, playerId) {
-  return events.map((e) => (e.type === 'peek' && e.player !== playerId ? { ...e, cards: [] } : e));
+  return events.map((e) => {
+    if (e.player === playerId) return e;
+    if (e.type === 'peek') return { ...e, cards: [] };
+    if ((e.type === 'archive' || e.type === 'doubles' || e.type === 'bought') && e.card) return { ...e, card: null };
+    return e;
+  });
 }

@@ -40,10 +40,16 @@ export function pathLabel(s, from, to) {
   const opt = BOARD.optional.find((o) => o.from === from && o.to === to);
   if (opt) return { icon: '🌉', text: t('path.optional', { island: islandName(n.island) }) };
   if (f.type === 'hub') return { icon: '🏝', text: t('path.toIsland', { island: islandName(n.island) }) };
-  if (n.name.startsWith('a1')) return { icon: '🛡', text: t('path.safe') };
-  if (n.name.startsWith('b1')) return { icon: '⚠', text: t('path.risky', { field: t(FIELD_INFO[n.type].key) }) };
-  if (n.bridge) return { icon: '🌉', text: t('path.bridge', { island: islandName((n.island + 1) % 6) }) };
-  if (n.spoke) return { icon: '✦', text: t('path.spoke') };
+  switch (n.role) {
+    case 'long': return { icon: '🛡', text: t('path.long') };
+    case 'short': return { icon: '⚠', text: t('path.short') };
+    case 'main': return { icon: '➡', text: t('path.main') };
+    case 'scenic': return { icon: '🌄', text: t('path.scenic') };
+    case 'bridge': return { icon: '🌉', text: t('path.bridge', { island: islandName((n.island + 1) % 6) }) };
+    case 'islet': return { icon: '🏝', text: t('path.islet', { island: islandName((n.island + 1) % 6) }) };
+    case 'spoke': return { icon: '✦', text: t('path.spoke') };
+    default: break;
+  }
   const field = n.type === 'topic' ? t(`topic.${effectiveTopic(s, to)}`) : t(FIELD_INFO[n.type].key);
   return { icon: FIELD_INFO[n.type].icon, text: field };
 }
@@ -249,14 +255,14 @@ const PANELS = {
 // ------------------------------------------------------------------ Karten ausspielen
 function cardPlayUI(s, p, id, act, done) {
   const def = CARDS[id];
-  let target = null, value = 3;
+  let target = null, value = 7;
   const box = h('div', { class: 'card tight col' });
   const targets = s.players.filter((o) => o.id !== p.id);
   const render = () => {
     clear(box);
     box.append(h('b', {}, t(`card.${id}.name`)), h('div', { class: 'muted small' }, t(`card.${id}.desc`)));
     if (def.target) box.append(h('div', { class: 'field' }, h('label', {}, t('card.target')), seg(targets.map((o) => ({ value: o.id, label: o.name })), target, (v) => { target = v; render(); })));
-    if (def.value) box.append(h('div', { class: 'field' }, h('label', {}, t('card.steps')), seg([1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: String(n) })), value, (v) => { value = v; })));
+    if (def.value) box.append(h('div', { class: 'field' }, h('label', {}, t('card.steps')), stepper(value, 2, 12, (v) => { value = v; }).el));
     box.append(h('div', { class: 'grid2' }, btn(t('common.cancel'), done, 'ghost'),
       btn(t('card.play'), () => act({ type: 'playCard', card: id, target, value }), 'hot', { disabled: def.target && target == null })));
   };

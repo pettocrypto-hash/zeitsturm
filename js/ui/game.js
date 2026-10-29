@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { h, btn, clear, modal, toast, banner, vibrate, sleep, UI, ask } from './dom.js';
 import { t } from '../i18n/index.js';
-import { TOPICS, TOPIC_INFO, EPOCHS, GOAL_FRAGMENTS } from '../core/constants.js';
+import { TOPICS, TOPIC_INFO, EPOCHS, EPOCH_INFO, FIELD_INFO, GOAL_FRAGMENTS } from '../core/constants.js';
 import { CARDS, CARD_KIND_ICON } from '../core/content.js';
 import { BOARD, getQuestion, pendingActors, effectiveTopic, score, starColors, hasShield, isEligible } from '../core/engine.js';
 import { renderPanel, waitingPanel, colorOf, pname, playerTag, cardEl, motionCard, bundleText } from './actions.js';
@@ -205,7 +205,7 @@ export class GameUI {
       return;
     }
     const panel = renderPanel({ s, p: s.players[pid], pd, ui: this, act: (a) => this.act({ ...a, player: pid }) });
-    if (panel) slot.appendChild(panel);
+    if (panel) { clear(this.peekBox); slot.appendChild(panel); }
     if (pd.kind !== 'quiz' && pd.kind !== 'challenge' && pd.kind !== 'duel') this.closeQuestion();
     this.followActive();
   }
@@ -245,16 +245,18 @@ export class GameUI {
     const onUp = (e) => {
       if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10) return;
       down = null;
-      if (!this.pathMode) return;
       const rect = canvas.getBoundingClientRect();
       const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       const ray = new THREE.Raycaster();
       ray.setFromCamera(ndc, this.R.world.camera);
       const id = this.R.board.pickTile(ray);
-      if (id != null && this.pathMode.includes(id)) {
+      if (id == null) return;
+      if (this.pathMode && this.pathMode.includes(id)) {
         const pid = pendingActors(this.view.pending)[0];
         if (this.session.isLocal(pid)) { this.clearPath(); this.act({ type: 'choosePath', node: id, player: pid }); }
+        return;
       }
+      this.showFieldInfo(id);
     };
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointerup', onUp);
@@ -281,7 +283,11 @@ export class GameUI {
     const name = (id) => pname(s, id);
     const local = (id) => this.session.isLocal(id);
     switch (e.type) {
-      case 'gameStart': banner(t('ev.gameStart')); A.startMusic('hub'); await sleep(900); break;
+      case 'gameStart':
+        A.startMusic('hub');
+        banner(t('ev.gameStart'));
+        await R.world.flyover();
+        break;
       case 'roundStart':
         if (e.round > 1) toast(t('ev.round', { n: e.round }));
         break;
@@ -318,12 +324,43 @@ export class GameUI {
         this.floatText(e.player, `🎲 ${e.total}`);
         break;
       }
+      case 'doubles':
+        A.sfx('coin'); vibrate([20, 30, 20]);
+        R.effects.burst(P.position(e.player).add(new THREE.Vector3(0, 2, 0)), '#ffc83a', 70, 8);
+        toast(t('ev.doubles', { name: name(e.player) }) + (local(e.player) && e.card ? ` – ${t(`card.${e.card}.name`)}` : ''), 'gold');
+        break;
       case 'move': {
         this.R.world.follow(() => P.position(e.player));
         let k = 0;
-        await P.walk(e.player, e.path, (node, last) => { A.sfx('step', k++); if (last) R.board.pulseTile(node); });
+        const color = colorOf(s.players[e.player]).hex;
+        let lastIsland = BOARD.nodes[e.path[0]]?.area === 'main' ? BOARD.nodes[e.path[0]].island : -2;
+        await P.walk(e.player, e.path, (node, last) => {
+          A.sfx('step', k++);
+          R.effects.burst(nodeTop(node), color, 8, 1.6, 0.6);
+          const nd = BOARD.nodes[node];
+          // Neue Epoche betreten: Hinweis und passende Musik
+          if (nd.area === 'main' && nd.island !== lastIsland) {
+            lastIsland = nd.island;
+            this.epochChip(nd.island);
+            if (e.player === s.current) A.startMusic(EPOCHS[nd.island]);
+          }
+          if (last) R.board.pulseTile(node);
+        });
         break;
       }
+      case 'stream': {
+        A.sfx('portal');
+        const pts = e.path.map((n) => nodeTop(n));
+        for (const p of pts) R.effects.burst(p, '#2aa8ff', 14, 2.5, 0.8);
+        toast(t('ev.stream', { name: name(e.player) }), 'good');
+        await P.walk(e.player, e.path, null, 0.45);
+        break;
+      }
+      case 'archive':
+        A.sfx('card');
+        R.effects.burst(P.position(e.player), '#f0a35e', 40);
+        toast(local(e.player) && e.card ? t('ev.archiveCard', { card: t(`card.${e.card}.name`) }) : t('ev.archive', { name: name(e.player) }), 'gold');
+        break;
       case 'land': {
         const top = nodeTop(e.node);
         R.effects.ring(top, colorOf(s.players[e.player]).hex, 3);
@@ -384,7 +421,7 @@ export class GameUI {
       case 'challengeStart':
         A.setTension(0.7); A.sfx('event');
         banner(`♛ ${t(`boss.${e.boss}`)}`, t(`epoch.${EPOCHS[e.island]}`) + ' · ' + name(e.player));
-        R.effects.column(nodeTop(BOARD.islands[e.island].ids.a2), '#ffb300');
+        R.effects.column(nodeTop(BOARD.islands[e.island].ids.g), '#ffb300');
         await sleep(1200);
         break;
       case 'challengeStep': await this.showChallengeStep(e, s); break;
@@ -461,6 +498,7 @@ export class GameUI {
   // Ergebnis-Karte: blockierend für lokale Akteure (mit „Weiter“), sonst als kurze Info oberhalb des Docks
   async resultCard(content, { blocking, title, icon, auto = 12000 }) {
     if (blocking) {
+      clear(this.peekBox); // auf dem Handy nichts übereinanderstapeln
       await new Promise((resolve) => {
         let done = false;
         const fin = () => { if (!done) { done = true; md.close(); resolve(); } };
@@ -566,6 +604,44 @@ export class GameUI {
 
   showPeek(e, s) {
     modal({ title: t('ev.peekTitle', { name: pname(s, e.target) }), icon: '🕵', content: h('div', { class: 'hand' }, e.cards.length ? e.cards.map((c) => cardEl(c)) : h('div', { class: 'muted' }, t('ev.peekNone'))) });
+  }
+
+  // Kleiner Hinweis beim Betreten einer neuen Epoche
+  epochChip(island) {
+    document.querySelectorAll('.epoch-chip').forEach((el) => el.remove());
+    const info = EPOCH_INFO[EPOCHS[island]];
+    const chip = h('div', { class: 'epoch-chip', style: { borderColor: info.accent, color: info.accent } }, '⏳ ', t(`epoch.${EPOCHS[island]}`));
+    UI().appendChild(chip);
+    setTimeout(() => chip.remove(), 2200);
+  }
+
+  // Antippen eines Feldes: Was passiert dort?
+  showFieldInfo(nodeId) {
+    const s = this.view;
+    const n = BOARD.nodes[nodeId];
+    const removed = s.mods.removed.includes(nodeId);
+    const topic = n.type === 'topic' ? effectiveTopic(s, nodeId) : null;
+    const f = FIELD_INFO[n.type];
+    const where = n.island < 0 ? t('area.hub') : `${t(`area.${n.area}`)} · ${t(`epoch.${EPOCHS[n.island]}`)}`;
+    const extra = [];
+    if (n.type === 'challenge') {
+      const beat = s.players.filter((p) => p.beaten.includes(n.island)).map((p) => p.name);
+      extra.push(t(`boss.${EPOCH_INFO[EPOCHS[n.island]].boss}`), beat.length ? t('info.beatenBy', { names: beat.join(', ') }) : t('info.unbeaten'));
+    }
+    if (n.type === 'stream') extra.push(t('info.streamTo'));
+    const here = s.players.filter((p) => p.pos === nodeId).map((p) => p.name);
+    if (here.length) extra.push(t('info.here', { names: here.join(', ') }));
+    const card = h('div', { class: 'dock-card', style: { maxHeight: '34dvh' } },
+      h('div', { class: 'row between' },
+        h('b', {}, topic ? `${TOPIC_INFO[topic].icon} ${t(`topic.${topic}`)}` : `${f.icon} ${t(f.key)}`),
+        btn('✕', () => card.remove(), 'ghost small icon-btn', { 'aria-label': t('common.close') })),
+      h('div', { class: 'muted small' }, where),
+      h('div', { class: 'small' }, removed ? t('info.removed') : t(`rules.field.${n.type}`)),
+      extra.length ? h('div', { class: 'small' }, extra.join(' · ')) : null);
+    clear(this.peekBox);
+    this.peekBox.appendChild(card);
+    this.R.board.pulseTile(nodeId);
+    setTimeout(() => card.remove(), 6500);
   }
 
   // ------------------------------------------------------------------ Menüs & Infos

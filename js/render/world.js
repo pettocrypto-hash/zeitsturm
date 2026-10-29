@@ -41,13 +41,13 @@ export class World {
     r.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x070a1c, 0.0055);
-    this.camera = new THREE.PerspectiveCamera(50, 1, 0.5, 900);
-    this.camera.position.set(0, 95, 110);
+    this.scene.fog = new THREE.FogExp2(0x070a1c, 0.003);
+    this.camera = new THREE.PerspectiveCamera(50, 1, 0.5, 1000);
+    this.camera.position.set(0, 150, 190);
 
     const c = (this.controls = new OrbitControls(this.camera, canvas));
     c.enableDamping = true; c.dampingFactor = 0.08;
-    c.minDistance = 10; c.maxDistance = 170;
+    c.minDistance = 10; c.maxDistance = 280;
     c.maxPolarAngle = 1.38; c.minPolarAngle = 0.15;
     c.enablePan = true; c.panSpeed = 0.8; c.rotateSpeed = 0.7; c.zoomSpeed = 1.1;
     c.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
@@ -95,15 +95,43 @@ export class World {
     this.stars = new THREE.Points(g, new THREE.PointsMaterial({ size: 2.2, map: glowTexture(), transparent: true, depthWrite: false, color: 0xbfd4ff, fog: false, sizeAttenuation: true }));
     s.add(this.stars);
 
+    // Farbige Nebelschleier am Himmel
+    const nebula = [['#6a3cff', 0.16], ['#ff3fb4', 0.1], ['#2fe6ff', 0.1], ['#ffc83a', 0.06], ['#7c4dff', 0.12]];
+    nebula.forEach(([color, opacity], i) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      const a = (i / nebula.length) * Math.PI * 2 + 0.6;
+      sp.position.set(Math.cos(a) * 430, 80 + (i % 3) * 70, Math.sin(a) * 430);
+      sp.scale.set(420, 260, 1);
+      s.add(sp);
+    });
+
     this.hemi = new THREE.HemisphereLight(0x9fb8ff, 0x1a1030, 0.85);
     s.add(this.hemi);
+    // Die Sonne folgt dem Kamerafokus: kleiner Schattenbereich = scharfe Schatten trotz großem Brett
     const sun = (this.sun = new THREE.DirectionalLight(0xfff1dd, 1.6));
-    sun.position.set(40, 90, 30);
-    sun.shadow.camera.left = -75; sun.shadow.camera.right = 75; sun.shadow.camera.top = 75; sun.shadow.camera.bottom = -75;
-    sun.shadow.camera.near = 10; sun.shadow.camera.far = 220;
+    this.sunOffset = new THREE.Vector3(40, 90, 30);
+    sun.position.copy(this.sunOffset);
+    sun.shadow.camera.left = -55; sun.shadow.camera.right = 55; sun.shadow.camera.top = 55; sun.shadow.camera.bottom = -55;
+    sun.shadow.camera.near = 10; sun.shadow.camera.far = 240;
     sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.04;
     s.add(sun);
     s.add(sun.target);
+  }
+
+  // Kamerafahrt über den Archipel (Spielstart)
+  async flyover() {
+    const c = this.controls;
+    this.followPaused = true;
+    this.cinematic = true;
+    const portrait = window.innerWidth < window.innerHeight;
+    await this.tween(3.6, (k) => {
+      const a = -Math.PI * 0.75 + k * Math.PI * 1.05;
+      const rad = (portrait ? 230 : 190) - k * 90;
+      this.camera.position.set(Math.cos(a) * rad, 150 - k * 70, Math.sin(a) * rad);
+      c.target.set(0, 0, 0);
+    }, ease.inOut);
+    this.cinematic = false;
+    this.followPaused = false;
   }
 
   setupComposer() {
@@ -208,9 +236,9 @@ export class World {
     const k = 1 - Math.pow(0.0025, dt);
     let target, dist;
     const portrait = window.innerWidth < window.innerHeight;
-    if (this.mode === 'overview') { target = new THREE.Vector3(0, 0, 0); dist = portrait ? 150 : 112; }
+    if (this.mode === 'overview') { target = new THREE.Vector3(0, 0, 0); dist = portrait ? 235 : 168; }
     else if (this.mode === 'focus' && this.focusPoint) { target = this.focusPoint; dist = this.focusDistance; }
-    else if (this.followTarget) { target = this.followTarget(); dist = portrait ? 40 : 32; }
+    else if (this.followTarget) { target = this.followTarget(); dist = portrait ? 46 : 38; }
     if (!target) return;
     c.target.lerp(target, k);
     const off = this.camera.position.clone().sub(c.target);
@@ -237,6 +265,8 @@ export class World {
     for (const u of this.updaters) u(dt, this.time);
     this.updateCamera(dt);
     this.controls.update();
+    this.sun.target.position.copy(this.controls.target);
+    this.sun.position.copy(this.controls.target).add(this.sunOffset);
     this.stars.rotation.y += dt * 0.004;
     if (this.q.bloom) this.composer.render(dt);
     else this.renderer.render(this.scene, this.camera);

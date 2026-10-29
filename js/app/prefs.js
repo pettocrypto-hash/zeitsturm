@@ -1,10 +1,11 @@
 // Einstellungen und Spielstände im Browser (localStorage). Alle Zugriffe sind abgesichert,
 // damit private Fenster oder blockierter Speicher das Spiel nicht verhindern.
-import { TOPICS } from '../core/constants.js';
+import { TOPICS, STATE_VERSION } from '../core/constants.js';
 
 const KEY = 'zeitsturm.prefs.v1';
-const SAVE_KEY = 'zeitsturm.save.v1';
-const ONLINE_KEY = 'zeitsturm.online.v1';
+// Spielstände hängen vom Brett ab: neue Brett-Version = neuer Speicherschlüssel
+const SAVE_KEY = `zeitsturm.save.v${STATE_VERSION}`;
+const ONLINE_KEY = `zeitsturm.online.v${STATE_VERSION}`;
 
 export function isMobile() {
   return matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -50,7 +51,10 @@ export function flushSave() {
   clearTimeout(timer); timer = null;
   if (pending) { write(SAVE_KEY, { ...pending, savedAt: Date.now() }); pending = null; }
 }
-export function loadGame() { return read(SAVE_KEY); }
+export function loadGame() {
+  const g = read(SAVE_KEY);
+  return g && g.state && g.state.v === STATE_VERSION ? g : null;
+}
 export function clearGame() { pending = null; clearTimeout(timer); timer = null; write(SAVE_KEY, null); }
 
 window.addEventListener('pagehide', flushSave);

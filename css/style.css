@@ -254,6 +254,12 @@ h3 { margin: 12px 0 6px; font-size: 17px; }
 .emoji-bar { display: flex; gap: 6px; flex-wrap: wrap; }
 .emoji-bar button { width: 46px; height: 46px; font-size: 24px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.05); cursor: pointer; }
 
+/* Epochen-Hinweis beim Betreten einer neuen Insel */
+.epoch-chip { position: absolute; left: 50%; top: calc(170px + var(--safe-t)); transform: translateX(-50%); z-index: 24; pointer-events: none;
+  font-family: var(--font-display); font-size: 15px; letter-spacing: .1em; padding: 8px 18px; border-radius: 999px; border: 1px solid;
+  background: rgba(5, 6, 15, .72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: chip 2.2s ease forwards; white-space: nowrap; }
+@keyframes chip { 0% { opacity: 0; transform: translate(-50%, -8px); } 15%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
 /* Chat */
 .chat-log { max-height: 40dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
 .chat-msg { font-size: 14px; background: rgba(255,255,255,.04); border-radius: 10px; padding: 6px 10px; -webkit-user-select: text; user-select: text; }

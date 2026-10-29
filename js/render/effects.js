@@ -125,7 +125,26 @@ export class Effects {
     this.onLightning?.();
   }
 
+  // Sternschnuppe quer über den Himmel
+  shootingStar() {
+    const a = Math.random() * Math.PI * 2, r = 260 + Math.random() * 120, y = 140 + Math.random() * 90;
+    const start = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+    const dir = new THREE.Vector3(-Math.sin(a), -0.35, Math.cos(a)).normalize().multiplyScalar(90 + Math.random() * 60);
+    const geo = new THREE.BufferGeometry().setFromPoints([start, start.clone()]);
+    const m = new THREE.LineBasicMaterial({ color: '#e8f4ff', transparent: true, opacity: 0.9, toneMapped: false, fog: false });
+    const line = new THREE.Line(geo, m);
+    this.world.scene.add(line);
+    const pos = geo.attributes.position;
+    this.world.tween(1.1, (e) => {
+      const head = start.clone().addScaledVector(dir, e), tail = start.clone().addScaledVector(dir, Math.max(0, e - 0.25));
+      pos.setXYZ(0, tail.x, tail.y, tail.z); pos.setXYZ(1, head.x, head.y, head.z); pos.needsUpdate = true;
+      m.opacity = 0.9 * (1 - e);
+    }, ease.out).then(() => { this.world.scene.remove(line); geo.dispose(); m.dispose(); });
+  }
+
   update(dt, t) {
+    this.nextStar = (this.nextStar ?? 4) - dt;
+    if (this.nextStar <= 0) { this.nextStar = 6 + Math.random() * 10; if (!document.hidden) this.shootingStar(); }
     const s = this.storm;
     if (!s) return;
     for (let i = 0; i < s.d.length; i++) {

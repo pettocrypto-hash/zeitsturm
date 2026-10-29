@@ -22,7 +22,7 @@ export const EPOCH_INFO = {
   zukunft:     { key: 'epoch.zukunft',     color: '#5b6cff', accent: '#45f3ff', sky: '#0b0d2a', boss: 'match' },
 };
 
-export const FIELD_TYPES = ['topic', 'event', 'duel', 'parliament', 'concert', 'market', 'portal', 'challenge', 'hub', 'bridge'];
+export const FIELD_TYPES = ['topic', 'event', 'duel', 'parliament', 'concert', 'market', 'portal', 'challenge', 'archive', 'stream', 'hub'];
 
 export const FIELD_INFO = {
   topic:      { icon: '?',  color: '#ffffff', key: 'field.topic' },
@@ -33,8 +33,12 @@ export const FIELD_INFO = {
   market:     { icon: '⇄', color: '#5fe08a', key: 'field.market' },
   portal:     { icon: '◎', color: '#45f3ff', key: 'field.portal' },
   challenge:  { icon: '♛', color: '#ffb300', key: 'field.challenge' },
+  archive:    { icon: '📚', color: '#f0a35e', key: 'field.archive' },
+  stream:     { icon: '≈', color: '#2aa8ff', key: 'field.stream' },
   hub:        { icon: '✦', color: '#ffffff', key: 'field.hub' },
 };
+
+export const STATE_VERSION = 2;
 
 export const PLAYER_COLORS = [
   { id: 'cyan',    hex: '#2fe6ff', symbol: '●' },
