@@ -9,6 +9,7 @@ import { Dice } from './render/dice.js';
 import { Effects } from './render/effects.js';
 import { AudioEngine } from './audio/audio.js';
 import { App } from './app/app.js';
+import { applyAccessibility } from './ui/info.js';
 
 function webglAvailable() {
   try {
@@ -21,6 +22,7 @@ async function boot() {
   const bootEl = document.getElementById('boot');
   const bootText = document.getElementById('boot-text');
   setLang(prefs.lang);
+  applyAccessibility();
   if (!webglAvailable()) { bootText.textContent = t('boot.webgl'); return; }
   try {
     setQuestionBank(await loadQuestions(prefs.lang));
@@ -29,6 +31,7 @@ async function boot() {
     const pieces = new Pieces(world);
     const dice = new Dice(world);
     const effects = new Effects(world);
+    effects.motionScale = prefs.reduceMotion ? 0.35 : 1;
     const audio = new AudioEngine();
     audio.setVolumes(prefs.music, prefs.sfx);
     // Audio darf erst nach einer Nutzergeste starten (Mobilgeräte)

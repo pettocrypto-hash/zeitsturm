@@ -68,6 +68,8 @@ export function modal({ title, icon, content, closable = true, onClose, cls = ''
     content);
   const back = h('div', { class: 'backdrop', onClick: (e) => { if (e.target === back && closable) close(); } }, m);
   UI().appendChild(back);
+  // Verlaufseintrag, damit die Zurück-Taste den Dialog schließt statt die App zu verlassen
+  if (closable && !history.state?.zeitsturm) history.pushState({ zeitsturm: true }, '');
   return { el: m, back, close, setContent: (c) => { clear(m); m.append(h('div', { class: 'grab' })); m.append(c); } };
 }
 

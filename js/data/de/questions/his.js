@@ -65,4 +65,15 @@ export default makeBank('his', [
   mat(1, -1, 'Ordne jedem Ereignis sein Jahr zu:', [['Fall der Berliner Mauer', '1989'], ['Französische Revolution', '1789'], ['Mondlandung', '1969'], ['Kolumbus erreicht Amerika', '1492']], 'Vier Wendepunkte der Geschichte.'),
   mat(2, 0, 'Ordne jedes Bauwerk seiner Kultur zu:', [['Kolosseum', 'Römer'], ['Parthenon', 'Griechen'], ['Machu Picchu', 'Inka'], ['Angkor Wat', 'Khmer']], 'Angkor Wat in Kambodscha ist das größte religiöse Bauwerk der Welt.'),
   mat(2, 4, 'Ordne jeder Person ihre historische Rolle zu:', [['Mahatma Gandhi', 'Unabhängigkeit Indiens'], ['Nelson Mandela', 'Ende der Apartheid'], ['Abraham Lincoln', 'Ende der Sklaverei in den USA'], ['Otto von Bismarck', 'Reichsgründung 1871']], 'Persönlichkeiten, die ihr Land prägten.'),
+  // Ergänzung Version 2.1
+  mc(1, 0, 'Welche antike Stadt wurde 79 n. Chr. beim Ausbruch des Vesuvs verschüttet?', ['Pompeji', 'Ostia', 'Syrakus', 'Delphi'], 'Die Asche konservierte die Stadt; Ausgrabungen laufen seit dem 18. Jahrhundert.'),
+  mc(2, 0, 'Welcher karthagische Feldherr überquerte mit Kriegselefanten die Alpen?', ['Hannibal', 'Hamilkar', 'Hasdrubal', 'Massinissa'], 'Hannibal zog 218 v. Chr. im Zweiten Punischen Krieg nach Italien.'),
+  mc(2, 1, 'Welches Reich wurde von Konstantinopel aus regiert und bestand bis 1453?', ['Byzantinisches Reich', 'Heiliges Römisches Reich', 'Osmanisches Reich', 'Karolingerreich'], 'Das Oströmische (Byzantinische) Reich endete mit der Eroberung durch die Osmanen.'),
+  mc(2, 1, 'Wer fand 1498 als Erster den Seeweg von Europa um Afrika herum nach Indien?', ['Vasco da Gama', 'Bartolomeu Dias', 'Christoph Kolumbus', 'Ferdinand Magellan'], 'Dias hatte zuvor (1488) das Kap der Guten Hoffnung umrundet.'),
+  mc(1, 2, 'Welcher Krieg tobte von 1861 bis 1865 in den USA?', ['Amerikanischer Bürgerkrieg (Sezessionskrieg)', 'Unabhängigkeitskrieg', 'Britisch-Amerikanischer Krieg', 'Mexikanisch-Amerikanischer Krieg'], 'Nord- und Südstaaten kämpften unter anderem um die Sklaverei.'),
+  mc(2, 2, 'Welches Land modernisierte sich ab 1868 mit der Meiji-Restauration in rasantem Tempo?', ['Japan', 'China', 'Korea', 'Thailand'], 'Der Kaiser erhielt die Macht zurück; Industrie und Verwaltung wurden nach westlichem Vorbild umgebaut.'),
+  mc(1, 3, 'Wie heißt die demokratische Republik in Deutschland von 1918/19 bis 1933?', ['Weimarer Republik', 'Bonner Republik', 'Deutscher Bund', 'Rheinbund'], 'Benannt nach Weimar, wo 1919 die Nationalversammlung tagte.'),
+  mc(2, 4, 'Welcher Staat wurde 1948 gegründet?', ['Israel', 'Pakistan', 'Bangladesch', 'Ghana'], 'Pakistan entstand 1947, Ghana wurde 1957 unabhängig, Bangladesch 1971.'),
+  tf(1, 4, 'Die erste Mondlandung fand vor dem Fall der Berliner Mauer statt.', true, 'Mondlandung 1969, Mauerfall 1989.'),
+  est(2, 1, 'In welchem Jahr begann der Dreißigjährige Krieg?', 1618, 5, '', 'Auslöser war der Prager Fenstersturz 1618; der Krieg endete 1648.'),
 ]);

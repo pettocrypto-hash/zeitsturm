@@ -64,6 +64,8 @@ export class Board3D {
     this.anims = [];
     this.particleSets = [];
     this.q = world.q;
+    this.tension = 0;
+    this.moodTimer = 0;
     this.build();
     world.addUpdater((dt, t) => this.update(dt, t));
   }
@@ -424,11 +426,16 @@ export class Board3D {
         pos[i * 3] = Math.cos(d.a) * d.r; pos[i * 3 + 1] = d.y; pos[i * 3 + 2] = Math.sin(d.a) * d.r;
       }
       pg.attributes.position.needsUpdate = true;
-      this.portalRings[0].rotation.x = t * 0.5; this.portalRings[0].rotation.y = t * 0.3;
-      this.portalRings[1].rotation.y = -t * 0.7; this.portalRings[1].rotation.z = t * 0.4;
-      this.portalRings[2].rotation.x = -t * 0.9; this.portalRings[2].rotation.z = t * 0.2;
+      // Spannung: Je näher jemand dem Portal-Sieg ist, desto schneller drehen die Ringe
+      this.portalPhase = (this.portalPhase || 0) + dt * (1 + this.tension * 1.8);
+      const ph = this.portalPhase;
+      this.portalRings[0].rotation.x = ph * 0.5; this.portalRings[0].rotation.y = ph * 0.3;
+      this.portalRings[1].rotation.y = -ph * 0.7; this.portalRings[1].rotation.z = ph * 0.4;
+      this.portalRings[2].rotation.x = -ph * 0.9; this.portalRings[2].rotation.z = ph * 0.2;
       minuteHand.rotation.y = -t * 0.25; hourHand.rotation.y = -t * 0.25 / 12;
       coreMat.uniforms.t.value = t;
+      coreMat.uniforms.power.value += ((0.5 + this.tension * 1.4 + (this.tension >= 1 ? Math.sin(t * 5) * 0.4 : 0)) - coreMat.uniforms.power.value) * Math.min(1, dt * 2);
+      beam.material.opacity = 0.06 + this.tension * 0.14;
       core.lookAt(this.world.camera.position);
     });
     const tile = mesh(new THREE.CylinderGeometry(2.4, 2.6, 0.5, 6), mat('#1c2350', { emissive: new THREE.Color('#2fe6ff'), emissiveIntensity: 0.35 }));
@@ -437,7 +444,8 @@ export class Board3D {
     this.hubTile = tile;
   }
 
-  setPortalPower(v) { this.portalCore.material.uniforms.power.value = v; }
+  // 0 = niemand nah dran, 1 = jemand kann das Portal betreten
+  setPortalTension(v) { this.tension = Math.max(0, Math.min(1, v)); }
 
   // ------------------------------------------------------------ Felder (instanziert)
   tileLook(n, topicOverride) {
@@ -693,6 +701,20 @@ export class Board3D {
     }
   }
 
+  // Weg-Vorschau: kleine goldene Markierung auf dem voraussichtlichen Landefeld
+  markLanding(nodeIds) {
+    for (const id of nodeIds) {
+      const p = nodeTop(id);
+      const m = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.1, 6, 32), glowMat('#ffc83a', 2.8));
+      m.rotation.x = Math.PI / 2;
+      m.position.copy(p).add(new THREE.Vector3(0, 0.35, 0));
+      m.userData.nodeId = id;
+      m.userData.landing = true;
+      this.group.add(m);
+      this.highlights.push(m);
+    }
+  }
+
   clearHighlight() {
     for (const h of this.highlights) { this.group.remove(h); h.geometry.dispose(); }
     this.highlights = [];
@@ -712,8 +734,19 @@ export class Board3D {
     for (const f of this.flowMaterials) f.tex.offset.x -= dt * f.speed;
     for (const e of this.dynamicEdges) if (e.state === 'open' && e.mesh.visible) e.tex.offset.x -= dt * e.speed;
     for (const a of this.anims) a(dt, t);
-    for (const h of this.highlights) { const s = 1 + Math.sin(t * 6) * 0.12; h.scale.set(s, s, s); }
+    for (const h of this.highlights) { const s = h.userData.landing ? 1 + Math.sin(t * 4) * 0.2 : 1 + Math.sin(t * 6) * 0.12; h.scale.set(s, s, s); }
+    if (this.highlights.length) this.world.poke();
     this.sea.uniforms.t.value = t;
+    // Farbstimmung: Himmel nimmt die Farbe der betrachteten Epoche an
+    this.moodTimer -= dt;
+    if (this.moodTimer <= 0) {
+      this.moodTimer = 0.5;
+      const tg = this.world.controls.target;
+      let best = null, bd = 1e9;
+      for (const isl of BOARD.islands) { const d = (isl.center[0] - tg.x) ** 2 + (isl.center[2] - tg.z) ** 2; if (d < bd) { bd = d; best = isl; } }
+      const near = bd < 36 * 36 && this.world.mode !== 'overview';
+      this.world.setMood(near ? new THREE.Color(EPOCH_INFO[best.epoch].accent).multiplyScalar(0.45) : '#3b1d5c');
+    }
     if (this.tileAnims.size) {
       for (const i of [...this.tileAnims]) {
         const st = this.tileState[i];

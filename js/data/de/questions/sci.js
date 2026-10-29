@@ -67,4 +67,15 @@ export default makeBank('sci', [
   mat(2, -1, 'Ordne jedem Element sein chemisches Symbol zu:', [['Eisen', 'Fe'], ['Silber', 'Ag'], ['Natrium', 'Na'], ['Kalium', 'K']], 'Viele Symbole leiten sich aus dem Lateinischen ab (ferrum, argentum, natrium, kalium).'),
   mat(2, -1, 'Ordne jeder Einheit ihre physikalische Größe zu:', [['Ampere', 'Stromstärke'], ['Ohm', 'Widerstand'], ['Watt', 'Leistung'], ['Hertz', 'Frequenz']], 'Alle vier sind nach Forschern benannt.'),
   mat(1, -1, 'Ordne jedem Planeten sein Merkmal zu:', [['Saturn', 'auffälliges Ringsystem'], ['Mars', 'der „Rote Planet“'], ['Jupiter', 'größter Planet'], ['Merkur', 'sonnennächster Planet']], 'Die rote Farbe des Mars stammt von Eisenoxid.'),
+  // Ergänzung Version 2.1
+  mc(1, -1, 'Welches Gas macht den größten Teil der Erdatmosphäre aus?', ['Stickstoff', 'Sauerstoff', 'Kohlenstoffdioxid', 'Argon'], 'Stickstoff hat einen Anteil von rund 78 %, Sauerstoff von rund 21 %.'),
+  mc(1, -1, 'Wie heißt die kleinste Einheit des Lebens, die selbstständig leben kann?', ['Zelle', 'Atom', 'Molekül', 'Gen'], 'Bakterien bestehen aus nur einer Zelle, der Mensch aus Billionen.'),
+  mc(2, 3, 'Wer stellte 1900 die Quantenhypothese auf und gilt als Begründer der Quantenphysik?', ['Max Planck', 'Albert Einstein', 'Werner Heisenberg', 'Niels Bohr'], 'Planck erhielt dafür 1918 den Nobelpreis für Physik.'),
+  mc(2, 2, 'Wer erfand den Blitzableiter?', ['Benjamin Franklin', 'Thomas Edison', 'Michael Faraday', 'Alessandro Volta'], 'Franklin erforschte um 1750 die Elektrizität von Gewittern.'),
+  mc(1, 4, 'Mit welchem Raumfahrtprogramm landeten Menschen auf dem Mond?', ['Apollo', 'Gemini', 'Sojus', 'Mercury'], 'Zwischen 1969 und 1972 landeten sechs Apollo-Missionen auf dem Mond.'),
+  mc(2, 5, 'Wie heißt der NASA-Rover, der 2021 auf dem Mars landete und den Hubschrauber „Ingenuity“ mitbrachte?', ['Perseverance', 'Curiosity', 'Opportunity', 'Sojourner'], 'Ingenuity flog als erstes motorisiertes Fluggerät auf einem anderen Planeten.'),
+  mc(1, -1, 'Wie heißt die Wissenschaft von den Lebewesen?', ['Biologie', 'Geologie', 'Astronomie', 'Chemie'], 'Bios ist griechisch für „Leben“.'),
+  tf(1, -1, 'Der Mond leuchtet aus eigener Kraft.', false, 'Er reflektiert das Licht der Sonne.'),
+  tf(2, -1, 'Wasser dehnt sich beim Gefrieren aus.', true, 'Darum schwimmt Eis – und Wasserleitungen können im Winter platzen.'),
+  est(1, -1, 'Wie oft schlägt das Herz eines Erwachsenen in Ruhe ungefähr pro Minute?', 70, 15, 'Schläge', 'Üblich sind etwa 60 bis 80 Schläge pro Minute.'),
 ]);

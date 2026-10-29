@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS = {
   stormRound: 20,
   turnTime: 90,
   difficulty: 'normal',
+  botLevel: 'normal',
   topics: [...TOPICS],
 };
 
@@ -29,7 +30,7 @@ let EV = [];
 function emit(type, data = {}) { EV.push({ type, ...data }); }
 
 // ---------------------------------------------------------------- Erzeugung
-export function createGame({ players, settings = {}, seed = 1 }) {
+export function createGame({ players, settings = {}, seed = 1, avoid = [] }) {
   const s = {
     v: STATE_VERSION,
     seed,
@@ -62,6 +63,7 @@ export function createGame({ players, settings = {}, seed = 1 }) {
     seq: 0,
   };
   s.stormRound = s.settings.stormRound;
+  s.avoid = avoid.filter((id) => BANK_BY_ID[id]).slice(-600);
   for (const t of TOPICS) s.decks.q[t] = shuffle(s, BANK.filter((q) => q.topic === t).map((q) => q.id));
   s.decks.events = shuffle(s, EVENTS.map((e) => e.id));
   s.decks.motions = shuffle(s, MOTIONS.map((m) => m.id));
@@ -107,6 +109,24 @@ export function openNext(s, nodeId) {
   return out;
 }
 
+// Weg-Vorschau für die Oberfläche: Wo landet die Figur, wenn sie an einer Kreuzung `start` wählt?
+// Liefert das Ziel, oder die nächste Kreuzung bzw. den Wächter, an dem sie anhalten müsste.
+export function projectLanding(s, playerId, start, steps) {
+  const p = s.players[playerId];
+  const stops = (n) => (n === BOARD.hub && isEligible(s, p))
+    || (NODES[n].type === 'challenge' && !p.beaten.includes(NODES[n].island) && !s.mods.removed.includes(n));
+  let pos = start, left = steps - 1;
+  if (stops(pos)) return { node: pos, kind: 'stop', left: 0 };
+  while (left > 0) {
+    const opts = openNext(s, pos);
+    if (opts.length !== 1) return { node: pos, kind: opts.length ? 'junction' : 'end', left };
+    pos = opts[0];
+    left--;
+    if (stops(pos)) return { node: pos, kind: 'stop', left: 0 };
+  }
+  return { node: pos, kind: 'land', left: 0 };
+}
+
 function addInf(s, p, n) {
   p.influence = Math.max(0, p.influence + n);
   p.stats.influenceMax = Math.max(p.stats.influenceMax, p.influence);
@@ -117,9 +137,13 @@ function drawCard(s, p) {
   if (!s.decks.cards.length) s.decks.cards = shuffle(s, buildCardDeck());
   const c = s.decks.cards.pop();
   p.cards.push(c);
-  const limit = s.rules.handLimit;
-  while (p.cards.length > limit) p.cards.shift();
+  trimHand(s, p);
   return c;
+}
+
+// Handlimit: die älteste Karte wird abgelegt – und das wird gemeldet
+function trimHand(s, p) {
+  while (p.cards.length > s.rules.handLimit) emit('discard', { player: p.id, card: p.cards.shift() });
 }
 
 function removeCard(p, cardId) {
@@ -154,6 +178,8 @@ function targetDiff(s, island) {
 }
 
 function drawQuestion(s, topics, types, epoch, diff) {
+  // Fragen-Gedächtnis: kürzlich auf diesem Gerät gestellte Fragen kommen seltener dran
+  const avoid = s.avoid && s.avoid.length ? new Set(s.avoid) : null;
   for (let attempt = 0; attempt < 2; attempt++) {
     let best = null, bestScore = 99, bestTopic = null;
     for (const t of topics) {
@@ -161,7 +187,7 @@ function drawQuestion(s, topics, types, epoch, diff) {
       for (let i = deck.length - 1; i >= 0; i--) {
         const q = BANK_BY_ID[deck[i]];
         if (!types.includes(q.type)) continue;
-        const sc = (q.epoch === epoch || q.epoch < 0 ? 0 : 1.5) + Math.abs(q.diff - diff) + nextRandom(s) * 0.9;
+        const sc = (q.epoch === epoch || q.epoch < 0 ? 0 : 1.5) + Math.abs(q.diff - diff) + nextRandom(s) * 0.9 + (avoid && avoid.has(q.id) ? 1.8 : 0);
         if (sc < bestScore) { bestScore = sc; best = q; bestTopic = t; }
       }
     }
@@ -416,7 +442,7 @@ function applyEventEffects(s, fx) {
     switch (f.op) {
       case 'inf': P.forEach((p) => addInf(s, p, f.n)); break;
       case 'draw': P.forEach((p) => { for (let i = 0; i < f.n; i++) drawCard(s, p); }); break;
-      case 'handCap': P.forEach((p) => { while (p.cards.length > s.rules.handLimit) p.cards.shift(); }); break;
+      case 'handCap': P.forEach((p) => trimHand(s, p)); break;
       case 'redistribute': {
         const total = P.reduce((a, p) => a + p.influence, 0);
         const each = Math.floor(total / P.length);
@@ -715,10 +741,17 @@ function answerChallenge(s, p, ans) {
   if (pd.correct >= pd.needed || pd.correct + remaining < pd.needed) {
     const won = pd.correct >= pd.needed;
     if (won) {
+      // Erstbesieger: Wer einen Wächter als Erste/r bezwingt, erhält 2 Einfluss extra
+      const first = !s.players.some((o) => o.id !== p.id && o.beaten.includes(pd.island));
       p.fragments += pd.double ? 2 : 1;
       p.beaten.push(pd.island);
       addInf(s, p, 2);
       p.stats.challenges++;
+      if (first) {
+        addInf(s, p, 2);
+        p.stats.firsts = (p.stats.firsts || 0) + 1;
+        emit('firstClear', { player: p.id, island: pd.island });
+      }
     }
     emit('challengeResult', { player: p.id, island: pd.island, won });
     return toPost(s, p);
@@ -794,7 +827,7 @@ function applyTargetCard(s, p, t, card) {
   switch (card) {
     case 's_inf': { const n = Math.min(4, t.influence); addInf(s, t, -n); if (t !== actor) addInf(s, actor, n); break; }
     case 's_card': case 'sp_steal': {
-      if (t.cards.length && t !== actor) { const c = t.cards.splice(randInt(s, 0, t.cards.length - 1), 1)[0]; actor.cards.push(c); while (actor.cards.length > s.rules.handLimit) actor.cards.shift(); }
+      if (t.cards.length && t !== actor) { const c = t.cards.splice(randInt(s, 0, t.cards.length - 1), 1)[0]; actor.cards.push(c); trimHand(s, actor); }
       break;
     }
     case 's_back': if (t.pos !== BOARD.hub) { t.pos = BOARD.islands[islandOf(t.pos)].ids.e; emit('teleport', { player: t.id, pos: t.pos }); } break;
@@ -808,7 +841,7 @@ function applyTargetCard(s, p, t, card) {
       break;
     }
     case 'sp_peek': emit('peek', { player: actor.id, target: t.id, cards: t.cards.slice() }); if (t !== actor) { const n = Math.min(1, t.influence); addInf(s, t, -n); addInf(s, actor, n); } break;
-    case 'sp_copy': if (t.cards.length) { actor.cards.push(pick(s, t.cards)); while (actor.cards.length > s.rules.handLimit) actor.cards.shift(); } break;
+    case 'sp_copy': if (t.cards.length) { actor.cards.push(pick(s, t.cards)); trimHand(s, actor); } break;
     case 'sp_dossier': t.reputation -= 2; clampRep(t); addInf(s, actor, 2); break;
     default: break;
   }
@@ -829,7 +862,7 @@ function transfer(s, from, to, bundle) {
   addInf(s, from, -inf); addInf(s, to, inf);
   for (const [t, n] of Object.entries(bundle.stars || {})) { from.stars[t] -= n; to.stars[t] += n; }
   for (const c of bundle.cards || []) { removeCard(from, c); to.cards.push(c); }
-  while (to.cards.length > s.rules.handLimit) to.cards.shift();
+  trimHand(s, to);
 }
 function bundleEmpty(b) {
   return !b || (!(b.influence > 0) && !Object.values(b.stars || {}).some((n) => n > 0) && !(b.cards || []).length);
@@ -863,6 +896,7 @@ export function awards(s) {
     tycoon: best((p) => p.stats.influenceMax),
     lucky: best((p) => p.stats.doubles || 0),
     archivist: best((p) => p.stats.archives || 0),
+    pioneer: best((p) => p.stats.firsts || 0),
   };
 }
 
@@ -1089,6 +1123,7 @@ function dispatch(s, a) {
 export function viewFor(s, playerId) {
   const v = JSON.parse(JSON.stringify(s));
   delete v.decks;
+  delete v.avoid;
   v.rng = 0;
   for (const p of v.players) if (p.id !== playerId) p.cards = p.cards.map(() => '?');
   if (v.pending?.kind === 'vote') {
@@ -1106,7 +1141,7 @@ export function sanitizeEvents(events, playerId) {
   return events.map((e) => {
     if (e.player === playerId) return e;
     if (e.type === 'peek') return { ...e, cards: [] };
-    if ((e.type === 'archive' || e.type === 'doubles' || e.type === 'bought') && e.card) return { ...e, card: null };
+    if ((e.type === 'archive' || e.type === 'doubles' || e.type === 'bought' || e.type === 'discard') && e.card) return { ...e, card: null };
     return e;
   });
 }

@@ -1,12 +1,13 @@
 {
   "name": "zeitsturm",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "ZEITSTURM – 3D-Online-Gesellschaftsspiel im Browser (Three.js + PeerJS), läuft auf GitHub Pages.",
   "type": "module",
   "scripts": {
     "start": "node tools/serve.mjs",
     "sim": "node sim/simulate.mjs 300",
-    "check": "node tools/check.mjs"
+    "check": "node tools/check.mjs",
+    "test": "node sim/rules.test.mjs"
   }
 }

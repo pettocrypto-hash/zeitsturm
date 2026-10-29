@@ -65,4 +65,15 @@ export default makeBank('pol', [
   mat(3, 2, 'Ordne jedem Denker sein Werk zu:', [['Thomas Hobbes', 'Leviathan'], ['John Locke', 'Zwei Abhandlungen über die Regierung'], ['Montesquieu', 'Vom Geist der Gesetze'], ['Platon', 'Politeia']], 'Klassiker der politischen Theorie von der Antike bis zur Aufklärung.'),
   mat(1, -1, 'Ordne jeder Staatsform die passende Beschreibung zu:', [['Monarchie', 'Herrschaft eines meist erblichen Oberhaupts'], ['Theokratie', 'Herrschaft religiöser Autoritäten'], ['Oligarchie', 'Herrschaft einer kleinen Gruppe'], ['Republik', 'Staatsoberhaupt wird auf Zeit bestimmt']], 'Grundbegriffe der Staatsformenlehre.'),
   mat(2, -1, 'Ordne jedes Parlament seinem Land zu:', [['Bundestag', 'Deutschland'], ['Kongress', 'USA'], ['Duma', 'Russland'], ['Knesset', 'Israel']], 'Viele Parlamente tragen historische Eigennamen.'),
+  // Ergänzung Version 2.1
+  mc(2, 4, 'Wer wählt die Richterinnen und Richter des Bundesverfassungsgerichts?', ['Je zur Hälfte Bundestag und Bundesrat', 'Allein der Bundestag', 'Der Bundespräsident', 'Die Bundesregierung'], 'So legt es Artikel 94 des Grundgesetzes fest.'),
+  mc(1, -1, 'Wie viele Stimmen hat man bei der Bundestagswahl?', ['Zwei', 'Eine', 'Drei', 'Fünf'], 'Mit der Erststimme wählt man im Wahlkreis, mit der Zweitstimme eine Landesliste.'),
+  mc(1, -1, 'Welches EU-Organ wird direkt von den Bürgerinnen und Bürgern gewählt?', ['Europäisches Parlament', 'Europäischer Rat', 'Rat der EU', 'Europäische Kommission'], 'Die Europawahl findet alle fünf Jahre statt.'),
+  mc(2, -1, 'Was bezeichnet man als „Exekutive“?', ['Die ausführende Gewalt (Regierung und Verwaltung)', 'Die gesetzgebende Gewalt', 'Die rechtsprechende Gewalt', 'Die Presse'], 'Legislative macht Gesetze, Exekutive führt sie aus, Judikative spricht Recht.'),
+  mc(3, 0, 'Welcher römische Politiker und Redner schrieb „Über den Staat“ (De re publica)?', ['Cicero', 'Seneca', 'Julius Caesar', 'Tacitus'], 'Cicero verfasste das Werk um 54–51 v. Chr.'),
+  mc(2, 2, 'In welchem Jahr trat in der Frankfurter Paulskirche die erste gesamtdeutsche Nationalversammlung zusammen?', ['1848', '1815', '1871', '1919'], 'Sie tagte 1848/49 und arbeitete eine Reichsverfassung aus.'),
+  mc(2, 5, 'Welches Land trat im Jahr 2020 aus der Europäischen Union aus?', ['Vereinigtes Königreich', 'Griechenland', 'Norwegen', 'Dänemark'], 'Der Austritt („Brexit“) wurde am 31. Januar 2020 wirksam. Norwegen war nie EU-Mitglied.'),
+  tf(2, 4, 'Die Bundesrepublik Deutschland gehört zu den Gründungsmitgliedern der Europäischen Wirtschaftsgemeinschaft.', true, 'Sie unterzeichnete 1957 die Römischen Verträge.'),
+  tf(1, -1, 'Der Bundespräsident bzw. die Bundespräsidentin wird für fünf Jahre gewählt.', true, 'Eine anschließende Wiederwahl ist einmal möglich (Art. 54 GG).'),
+  est(2, 5, 'Wie viele Mitgliedstaaten hat die NATO (Stand 2025)?', 32, 2, 'Staaten', 'Zuletzt traten Finnland (2023) und Schweden (2024) bei.'),
 ]);

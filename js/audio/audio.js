@@ -245,6 +245,12 @@ export class AudioEngine {
         break;
       }
       case 'error': this.note('square', 40, t, 0.12, 0.3); break;
+      case 'doubles': [79, 83, 86, 91].forEach((m, i) => this.note('bell', m, t + i * 0.06, 0.12, 0.4)); this.drum('clap', t, 0.6, B); break;
+      case 'stream': { const n = this.noise(t, 1.1, B, { type: 'bandpass', freq: 600, q: 0.8, gain: 0.35, attack: 0.08 }); n.f.frequency.exponentialRampToValueAtTime(2400, t + 0.9); [72, 76, 79].forEach((m, i) => this.note('flute', m, t + 0.1 + i * 0.12, 0.2, 0.25)); break; }
+      case 'archive': for (let i = 0; i < 3; i++) this.noise(t + i * 0.07, 0.06, B, { type: 'highpass', freq: 3500, gain: 0.18 }); this.note('pluck', 74, t + 0.2, 0.2, 0.3); break;
+      case 'firstClear': [67, 72, 76, 79, 84].forEach((m, i) => this.note('brass', m, t + i * 0.09, 0.22, 0.5)); this.drum('kick', t, 0.8, B); break;
+      case 'discard': this.noise(t, 0.18, B, { type: 'bandpass', freq: 900, q: 1, gain: 0.2 }); this.note('pluck', 55, t + 0.05, 0.1, 0.2); break;
+      case 'speed': this.note('synth', 84, t, 0.05, 0.25); this.note('synth', 91, t + 0.06, 0.05, 0.25); break;
       default: break;
     }
   }

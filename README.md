@@ -4,10 +4,20 @@
 
 **Neu in Version 2:** doppelt so großes, verzweigteres Brett mit Nebeninseln (Inselhüpfen), Aussichtspfaden und Dreifach-Kreuzungen. Dazu kommen zwei Würfel mit Pasch-Bonus und die neuen Felder **Archiv** und **Zeitstrom**. Optisch neu sind das animierte Wolkenmeer, Inseln mit Gelände und Bewuchs, Wasserfälle, das Portal mit Zeituhr, Lichtspuren der Figuren, Sternschnuppen und eine Kamerafahrt zum Spielstart. Wer ein Feld antippt, sieht, was dort passiert. Gerendert wird mit Instancing, damit das große Brett auf dem Handy flüssig bleibt.
 
+**Neu in Version 2.1 (verfeinert auf allen Ebenen):**
+- **Spielgefühl:** Weg-Vorschau an jeder Kreuzung (Text und goldener Ring auf dem Brett), Schnellvorlauf ⏩, gut lesbares Würfelergebnis und ein Hinweis, wenn eine Karte über das Handlimit hinaus abgelegt wird.
+- **Regeln:** Erstbesieger-Bonus. Wer einen Wächter als Erste/r bezwingt, erhält 2 Einfluss extra, dazu kommt die Auszeichnung „Pionier“.
+- **Inhalte:** 60 neue Fragen (jetzt 445). Ein Fragen-Gedächtnis sorgt dafür, dass bereits gestellte Fragen in späteren Partien seltener kommen.
+- **Bots:** Stärke wählbar (leicht, normal, stark). Politiker-Bots kaufen gezielter ein, die Balance der Stile liegt jetzt bei 0,97 bis 1,01.
+- **Online:** QR-Code in der Lobby. Die Zurück-Taste schließt erst Dialoge und fragt vor dem Verlassen einer Partie.
+- **Barrierefreiheit:** große Schrift und reduzierte Bewegung als Schalter.
+- **Atmosphäre und Akku:** Der Himmel färbt sich passend zur Epoche, das Portal pulsiert stärker, je näher jemand dem Sieg ist, und im Leerlauf spart das Spiel Strom.
+- **Qualität:** 29 automatische Regeltests vor jeder Veröffentlichung.
+
 - **Mobile-first:** gebaut für Handys im Hoch- und Querformat (Touch, große Buttons, Bottom-Sheets, Vibration), läuft genauso am Desktop. Installierbar als App (PWA, Vollbild, offline spielbar für lokale Partien).
 - **Reine Web-App ohne Server:** läuft auf GitHub Pages. Online-Multiplayer per WebRTC (PeerJS), der Host rechnet die Partie.
 - **Alles selbst erzeugt:** 3D-Modelle, Texturen, Icons, Musik und Soundeffekte entstehen prozedural im Browser. Keine externen Assets, keine Lizenzprobleme.
-- **385 geprüfte Fragen** in 6 Themen und 5 Formaten, 40 Ereignisse, 30 Anträge, 30 Karten, 3 Musik-Minispiele, 10 Feldtypen.
+- **445 geprüfte Fragen** in 6 Themen und 5 Formaten, 40 Ereignisse, 30 Anträge, 30 Karten, 3 Musik-Minispiele, 10 Feldtypen.
 
 ---
 
@@ -51,7 +61,7 @@ Danach startet ZEITSTURM im Vollbild wie eine native App. Nach dem ersten Besuch
 
 Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert ausliefert. Alle Pfade sind relativ, das Spiel funktioniert daher in jedem Unterordner.
 
-**Einladungslinks:** Der Host kann in der Lobby einen Link der Form `…/zeitsturm/?room=ABCDE` teilen. Wer ihn öffnet, landet direkt im Beitreten-Dialog.
+**Einladungslinks:** Der Host kann in der Lobby einen Link der Form `…/zeitsturm/?room=ABCDE` teilen oder den angezeigten **QR-Code** scannen lassen. Wer ihn öffnet, landet direkt im Beitreten-Dialog.
 
 ---
 
@@ -65,12 +75,12 @@ Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert auslief
 
 ### Ablauf eines Zuges
 1. **Würfeln oder Karte spielen.** Gewürfelt wird mit **zwei Würfeln** (2–12 Felder). Ein **Pasch** bringt sofort eine Bonuskarte. Vor dem Würfeln darfst du eine Karte spielen. Zeitsprung-Karten ersetzen den Wurf.
-2. **Bewegen.** Ziehe Feld für Feld in Pfeilrichtung (die Wege „fließen“ sichtbar). An **Kreuzungen** wählst du frei – per Button oder durch Antippen eines leuchtenden Felds.
+2. **Bewegen.** Ziehe Feld für Feld in Pfeilrichtung (die Wege „fließen“ sichtbar). An **Kreuzungen** wählst du frei – per Button oder durch Antippen eines leuchtenden Felds. Jede Option zeigt vorab, wo du landen würdest (goldener Ring auf dem Brett).
 3. **Feld-Aktion** des Feldes, auf dem du stehen bleibst.
 4. **Verhandeln (optional):** Handel anbieten (mit Gegenangebot), Bündnis anbieten oder Verrat begehen.
 5. **Zug beenden.**
 
-**Wächter-Felder (♛)** halten dich an, solange du ihren Wächter noch nicht besiegt hast. Du musst dich der Herausforderung stellen.
+**Wächter-Felder (♛)** halten dich an, solange du ihren Wächter noch nicht besiegt hast. Du musst dich der Herausforderung stellen. Wer einen Wächter als Erste/r bezwingt, erhält **2 Einfluss extra** (Erstbesieger).
 
 ### Ressourcen
 | Ressource | Wofür |
@@ -78,7 +88,7 @@ Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert auslief
 | ⭐ **Wissenssterne** (6 Farben, jede mit Symbol: ⚖ 📜 ♪ ⚛ 🌍 🎬) | Jede Farbe einmal ist Pflicht fürs Portal; Sterne zählen in der Wertung. |
 | ◆ **Einfluss** | Währung für Parlament (Stimmen), Markt, Duelle und Bestechung. |
 | ⧗ **Zeitfragmente** | Gewinnbedingung (5). Nur über Wächter, Duelle, Markt und Ereignisse. |
-| 🂠 **Karten** | Höchstens 5 auf der Hand. |
+| 🂠 **Karten** | Höchstens 5 auf der Hand. Wer mehr zieht, legt die älteste Karte ab und bekommt einen Hinweis. |
 | ★ **Ansehen** (0–10, Start 5) | Ab 8 zählt deine Grundstimme doppelt, bei 2 oder weniger gar nicht. |
 
 ### Die Feldtypen
@@ -95,7 +105,7 @@ Neben den acht Feldtypen aus dem Auftrag gibt es zwei neue: **Archiv** und **Zei
 | ♫ **Konzert** | Musik-Minispiel: Rhythmus-Duell, Melodie-Gedächtnis oder Instrumente erkennen. Ab 75 % gibt es einen **Musik-Stern** (+1 Einfluss), ab 40 % 2 Einfluss. |
 | ⇄ **Markt** | Bei der Bank: Karte (3 ◆, max. 2), Wissensstern deiner Wahl (6 ◆), Zeitfragment (10 ◆), Stern verkaufen (+3 ◆). Danach darfst du bis zu **zwei Handelsangebote** an Mitspieler machen (Karten, Sterne, Einfluss), mit **Gegenangebot**. Außerhalb des Markts ist pro Zug ein Angebot erlaubt. |
 | ◎ **Zeitportal** | Abkürzung in eine Epoche deiner Wahl. Risiko beim Sprung: 1/6 Zeitsturm-Strafe (−3 Einfluss, −1 Karte), 1/6 zufälliges Ziel. |
-| ♛ **Epochen-Herausforderung** | Wächter jeder Epoche mit eigenem Prüfungstyp: Wissensrennen (Antike, Weltkriegs-Ära), Reihenfolge-Rätsel (Mittelalter, Kalter Krieg), Zuordnungs-Prüfung (Industrialisierung, Zukunft). 2 von 3 richtig (Schwer: 3 von 3) → **Zeitfragment** + 2 Einfluss. Jeder Wächter kann von jedem Spieler einmal besiegt werden. |
+| ♛ **Epochen-Herausforderung** | Wächter jeder Epoche mit eigenem Prüfungstyp: Wissensrennen (Antike, Weltkriegs-Ära), Reihenfolge-Rätsel (Mittelalter, Kalter Krieg), Zuordnungs-Prüfung (Industrialisierung, Zukunft). 2 von 3 richtig (Schwer: 3 von 3) → **Zeitfragment** + 2 Einfluss, als Erstbesieger 2 Einfluss extra. Jeder Wächter kann von jedem Spieler einmal besiegt werden. |
 
 ### Das Brett: ein Archipel mit 175 Feldern
 Sechs große Epochen-Inseln (Antike, Mittelalter, Industrialisierung, Weltkriegs-Ära, Kalter Krieg, Zukunft) liegen um das Zeitportal, dazwischen schweben sechs Nebeninseln. Jede Epoche hat **drei echte Entscheidungen**:
@@ -132,7 +142,7 @@ Zwei Spieler können für **5 Runden** ein Bündnis schließen. Dann gilt: Beant
 - **Rückenwind:** Wer mindestens 5 Punkte hinter dem Führenden liegt, würfelt mit drei Würfeln (die besten zwei zählen) und erhält +1 Einfluss pro Zug.
 
 ### Die Themen
-Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geografie & Natur 🌍 · Film & Popkultur 🎬. Es gibt je 63 bis 65 Fragen, insgesamt 385. Fragenformate: Multiple Choice, Wahr/Falsch, Schätzfrage (Toleranzbereich zählt als richtig), Reihenfolge (antippen in der richtigen Reihenfolge) und Zuordnung (links und rechts antippen). Jede Frage hat Schwierigkeit 1–3, eine Epochen-Zuordnung und eine Erklärung. Fragen werden pro Partie ohne Wiederholung gezogen. Erst wenn ein Thema komplett aufgebraucht ist, wird es neu gemischt.
+Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geografie & Natur 🌍 · Film & Popkultur 🎬. Es gibt je 73 bis 75 Fragen, insgesamt 445. Fragenformate: Multiple Choice, Wahr/Falsch, Schätzfrage (Toleranzbereich zählt als richtig), Reihenfolge (antippen in der richtigen Reihenfolge) und Zuordnung (links und rechts antippen). Jede Frage hat Schwierigkeit 1–3, eine Epochen-Zuordnung und eine Erklärung. Fragen werden pro Partie ohne Wiederholung gezogen. Erst wenn ein Thema komplett aufgebraucht ist, wird es neu gemischt. Über Partien hinweg merkt sich das Gerät die zuletzt gestellten Fragen und zieht sie seltener.
 
 ---
 
@@ -147,6 +157,8 @@ Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geo
 | Feld-Info | beliebiges Feld antippen | anklicken |
 | Spielerdetails | Spieler-Chip antippen | anklicken |
 | Protokoll, Chat, Regeln, Menü | 📜 💬 ❔ ☰ | ebenso |
+| Schnellvorlauf (Animationen und Bots) | ⏩ | ⏩ |
+| Dialog schließen / Partie verlassen | Zurück-Taste oder -Geste (fragt vorher nach) | Browser-Zurück |
 
 **Hot-Seat (ein Gerät):** Bei geheimen Entscheidungen (Abstimmung, Duell, Handel, Bündnis) erscheint ein Sichtschutz: „Gib das Gerät an …“.
 
@@ -154,7 +166,7 @@ Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geo
 
 ## 🌐 Online-Multiplayer
 
-- **Raum erstellen:** Der Host erhält einen 5-stelligen Raumcode (z. B. `KXQRT`) und einen Einladungslink. Mitspieler treten mit Code oder Link bei, wählen Namen, Farbe und Figur und tippen auf **„Bereit“**. Freie Plätze kann der Host mit Bots besetzen. Der Host startet die Partie, sobald mindestens 2 Plätze belegt und alle Menschen bereit sind.
+- **Raum erstellen:** Der Host erhält einen 5-stelligen Raumcode (z. B. `KXQRT`), einen Einladungslink und einen QR-Code. Mitspieler treten mit Code oder Link bei, wählen Namen, Farbe und Figur und tippen auf **„Bereit“**. Freie Plätze kann der Host mit Bots besetzen. Der Host startet die Partie, sobald mindestens 2 Plätze belegt und alle Menschen bereit sind.
 - **Host-Autorität:** Nur der Host berechnet die Partie. Mitspieler senden Aktionen und erhalten den Zustand, wobei verdeckte Informationen (Handkarten, geheime Gebote, Duellantworten) gefiltert werden.
 - **Reconnect:** Bricht die Verbindung ab, verbinden sich Mitspieler automatisch neu. Nach einem Neuladen gibt es im Menü „Wieder beitreten“. Ein Token im Browser sorgt dafür, dass man auf denselben Platz zurückkommt. Lädt der **Host** neu, öffnet „Partie fortsetzen“ den Raum mit demselben Code wieder, und die Mitspieler verbinden sich von selbst.
 - Ist ein Mitspieler offline, läuft seine Bedenkzeit trotzdem ab (auch ohne eingestelltes Zeitlimit, dann 25 s). Danach wird automatisch eine minimale Aktion gewählt, damit die Partie nicht hängt.
@@ -166,7 +178,7 @@ Politik ⚖ · Geschichte 📜 · Musik ♪ · Wissenschaft & Technik ⚛ · Geo
 
 ## ⚙ Einstellungen
 
-Grafikqualität (Niedrig/Mittel/Hoch), Musik- und Effektlautstärke getrennt, Vibration, Tempo der Bots, Sprache. Pro Partie stellst du außerdem Rundenzahl (15/20/30), Zeitlimit pro Entscheidung (aus/60/90/120 s), Schwierigkeit und aktive Themen (mindestens 3) ein. Tipp: Bei 15 Runden entscheidet fast immer die Wertung. Für Portal-Siege eignen sich 20 oder 30 Runden.
+Grafikqualität (Niedrig/Mittel/Hoch), Musik- und Effektlautstärke getrennt, Vibration, große Schrift, Bewegung reduzieren, Tempo der Bots, Sprache. Pro Partie stellst du außerdem Rundenzahl (15/20/30), Zeitlimit pro Entscheidung (aus/60/90/120 s), Schwierigkeit, Stärke der Bots (leicht/normal/stark) und aktive Themen (mindestens 3) ein. Tipp: Bei 15 Runden entscheidet fast immer die Wertung. Für Portal-Siege eignen sich 20 oder 30 Runden.
 
 Die Qualitätsstufe wird beim ersten Start automatisch gewählt (Handy: Mittel, Desktop: Hoch). Zusätzlich misst das Spiel laufend die Bildrate und senkt bei Bedarf die Render-Auflösung, damit es flüssig bleibt (Ziel 60 FPS). Retina-Displays werden bis zum Faktor 2,25 berücksichtigt.
 
@@ -186,17 +198,23 @@ node tools/check.mjs
 
 Prüft die Syntax aller Module, fehlende Übersetzungsschlüssel, das Format aller Fragen und die Mindestmengen an Inhalten.
 
-**Ergebnis der finalen Simulation mit dem Archipel-Brett (5 × 1.200 = 6.000 Partien, Seeds 2026/4242/999/31337/7):** alle Partien beendet, **0 Abstürze, 0 Hänger, 0 ungültige Aktionen**. Etwa 72 % enden per Portal, 28 % per Wertung; ein Portal-Sieg fällt im Schnitt in Runde 24.
+```bash
+node sim/rules.test.mjs
+```
+
+29 gezielte Regeltests: Brettaufbau, Würfel und Pasch, Archiv, Handlimit (inklusive verdeckter Ablage im Online-Spiel), Zeitstrom, Wächter-Stopp und Erstbesieger, Handelslimit am Markt, Umfärben, Weg-Vorschau, Informationsfilter für Mitspieler und Fragen-Gedächtnis. Alle drei Prüfungen laufen vor jeder Veröffentlichung automatisch im GitHub-Workflow.
+
+**Ergebnis der finalen Simulation von Version 2.1 (5 × 1.200 = 6.000 Partien, Seeds 4242/999/31337/7/123):** alle Partien beendet, **0 Abstürze, 0 Hänger, 0 ungültige Aktionen**. Etwa 74 % enden per Portal, 26 % per Wertung; ein Portal-Sieg fällt im Schnitt in Runde 24,4.
 
 | Spielstil (Bot) | Siegfaktor (1,00 = exakt fair), Mittel über 5 Seeds | Spannweite |
 |---|---|---|
-| Wissens-Sammler | 1,05 | 0,99–1,08 |
-| Politiker | 0,97 | 0,91–1,03 |
-| Saboteur | 0,98 | 0,92–1,02 |
+| Wissens-Sammler | 1,01 | 0,95–1,08 |
+| Politiker | 0,97 | 0,94–1,00 |
+| Saboteur | 1,01 | 0,95–1,11 |
 
-Kein Stil dominiert, alle drei gewinnen regelmäßig. Auch der Vorteil der Startreihenfolge ist gering (Faktor 0,9–1,1).
+Kein Stil dominiert, alle drei gewinnen regelmäßig. Auch der Vorteil der Startreihenfolge ist gering (Faktor 0,95–1,11). Der Robustheitstest mit wechselnden Einstellungen (`--varied`) lief mit 600/600 Partien ohne Absturz oder Hänger.
 
-*Wie die Balance entstand:* Ein erster Messfehler (Spielerzahl und Stil-Rotation waren gekoppelt, sodass der Saboteur nie in 2er-Partien saß) wurde korrigiert. Danach wurden Marktpreise (Stern 6, Fragment 10), Kopfgeld, Duell-Siegprämie und die Bot-Strategien in kleinen Schritten anhand von jeweils mehreren Tausend Partien justiert.
+*Wie die Balance entstand:* Ein erster Messfehler (Spielerzahl und Stil-Rotation waren gekoppelt, sodass der Saboteur nie in 2er-Partien saß) wurde korrigiert. Danach wurden Marktpreise (Stern 6, Fragment 10), Kopfgeld, Duell-Siegprämie und die Bot-Strategien in kleinen Schritten anhand von jeweils mehreren Tausend Partien justiert. In Version 2.1 fiel der Politiker nach Einführung des Erstbesieger-Bonus auf 0,95 zurück. Seitdem geht der Politiker-Bot nur noch zum Markt, wenn sein Einfluss für ein Fragment oder einen fehlenden Stern reicht, und kommt damit wieder auf 0,97.
 
 ---
 
@@ -220,7 +238,7 @@ Der Auftrag ließ einige Punkte offen. Hier ist festgehalten, wie ich sie entsch
 14. **Kopfgeld & stärkere Sabotage:** Aus der Balance-Simulation abgeleitet. Sabotage hilft sonst vor allem den Unbeteiligten; das Kopfgeld macht den Saboteur-Stil zu einem eigenständigen Siegweg.
 15. **Comeback „Rückenwind“** ab 5 Punkten Rückstand, statt Gummiband-Effekten, die den Führenden bestrafen.
 16. **Zeitlimit pro Entscheidung** (nicht pro ganzem Zug), mit Zusatzzeit für Konzerte, Abstimmungen, Handel und Markt. Bei Ablauf wird automatisch eine minimale Aktion gewählt (z. B. Enthaltung, „keine Antwort“), damit die Partie nie einschläft. Im Tutorial gibt es kein Zeitlimit.
-17. **Online:** Öffentlicher PeerJS-Broker, Host-Autorität, Peer-ID `zeitsturm-v1-<CODE>`. Der Raum nutzt Sprache und Fragenkatalog des Hosts. Mitspieler können während einer laufenden Partie nur mit gültigem Token (Reconnect) beitreten, nicht neu.
+17. **Online:** Öffentlicher PeerJS-Broker, Host-Autorität, Peer-ID `zeitsturm-v2-<CODE>`. Der Raum nutzt Sprache und Fragenkatalog des Hosts. Mitspieler können während einer laufenden Partie nur mit gültigem Token (Reconnect) beitreten, nicht neu.
 18. **Hot-Seat-Sichtschutz** nur bei geheimen Entscheidungen, damit Partien an einem Gerät flüssig bleiben.
 19. **Bots** mit drei Stilen (Wissen, Politik, Sabotage). Sie treffen Fragen mit realistischer Quote (ca. 72 %, sinkt mit der Schwierigkeit) und nutzen einen eigenen Zufallsgenerator, damit sie den Spiel-Zufall nicht beeinflussen.
 20. **Musik:** Jede Epoche hat ein deterministisch „komponiertes“ Stück (eigene Tonleiter, eigenes Tempo, eigene Instrumente und Rhythmen). Bei Duellen und Herausforderungen steigt die Spannung (schneller, mehr Percussion). Während der Minispiele wird die Musik abgesenkt.
@@ -236,6 +254,18 @@ Der Auftrag ließ einige Punkte offen. Hier ist festgehalten, wie ich sie entsch
 28. **Performance:** Alle 174 Felder werden als InstancedMesh gezeichnet (Körper, Leuchtrand und Symbol aus einem Symbol-Atlas, also 3 Draw-Calls). Statische Wege und statisches Dekor werden pro Material zusammengeführt, und die Schattenkamera folgt dem Kamerafokus (scharfe Schatten trotz großem Brett).
 29. **Versionierung:** Spielstände und Online-Räume tragen die Brett-Version im Schlüssel bzw. in der Peer-ID, sodass alte Spielstände nicht mit dem neuen Brett kollidieren. Der Service Worker lädt eigene Dateien jetzt „network-first“, damit Updates sofort ankommen; offline greift weiter der Cache.
 
+### Version 2.1 (Verfeinerung auf allen Ebenen)
+30. **Erstbesieger-Bonus:** Wer einen Wächter als Erste/r besiegt, erhält 2 Einfluss extra. Das belohnt Tempo und Mut, macht die Wächter zu einem Wettlauf und sorgt für frühe Höhepunkte (Banner und Konfetti). Am Spielende würdigt die Auszeichnung „Pionier“ die meisten Erstbesiege.
+31. **Fragen-Gedächtnis:** Das Gerät speichert die IDs der zuletzt gestellten 600 Fragen, nur lokal. Beim Ziehen werden diese Fragen stark abgewertet, aber nicht ausgeschlossen, damit kein Thema leerläuft. Online gilt das Gedächtnis des Hosts, und die Liste wird nicht an Mitspieler übertragen.
+32. **Bot-Stärke:** Drei Stufen mit 58, 72 oder 85 % Trefferquote bei leichten Fragen. Die Quote sinkt mit der Schwierigkeit, und auch die Konzert-Leistung skaliert mit. Die Strategien bleiben gleich, damit die Balance zwischen den Stilen erhalten bleibt.
+33. **Weg-Vorschau:** An Kreuzungen berechnet die Engine (`projectLanding`) für jede Option, wo die Figur mit den restlichen Schritten landet oder ob sie vorher stoppt (Wächter, nächste Kreuzung, Portal). Das ersetzt mühsames Abzählen auf dem kleinen Bildschirm. Weil das Brett offen liegt, verrät die Vorschau nichts Verdecktes.
+34. **Schnellvorlauf:** ⏩ beschleunigt Animationen (Faktor 2,5) und die Bedenkzeit der Bots. Die Spiellogik bleibt unberührt.
+35. **Zurück-Taste:** Auf Android ist die Zurück-Geste allgegenwärtig. Sie schließt jetzt zuerst offene Dialoge und fragt im Spiel vor dem Verlassen nach, statt die Partie kommentarlos zu beenden.
+36. **QR-Code ohne Bibliothek:** Ein eigener kleiner Generator (Byte-Modus, Fehlerkorrektur M, Versionen 1–10) hält das Projekt frei von Abhängigkeiten. Er wurde mit einem unabhängigen Decoder geprüft. Mitspieler am selben Tisch scannen einfach den Bildschirm des Hosts.
+37. **Barrierefreiheit:** „Große Schrift“ vergrößert die Oberfläche um 12 %. „Bewegung reduzieren“ überspringt den Kameraflug, dünnt Partikeleffekte aus und schaltet CSS-Animationen ab; die Systemeinstellung ist die Voreinstellung.
+38. **Akku und Atmosphäre:** Ohne Eingabe und Animation rendert das Spiel nach 2,5 Sekunden nur jedes zweite Bild. Himmel und Umgebungslicht nehmen sanft die Farbe der Epoche an, die die Kamera gerade zeigt. Das Portal pulsiert schneller und heller, je näher jemand dem Portal-Sieg ist.
+39. **Regeltests statt nur Simulation:** Die Simulation findet Abstürze und Balance-Probleme, aber keine leise falsch umgesetzte Regel. Deshalb prüfen 29 gezielte Tests jede Sonderregel einzeln.
+
 ---
 
 ## 📁 Projektstruktur
@@ -248,14 +278,14 @@ zeitsturm/
 ├── js/
 │   ├── main.js                               Start
 │   ├── core/      engine.js (Regeln), board.js (Brett), bots.js, content.js (Karten/Ereignisse/Anträge), rng.js
-│   ├── data/de/questions/                    385 Fragen in 6 Themen
+│   ├── data/de/questions/                    445 Fragen in 6 Themen
 │   ├── render/    world.js (Renderer, Qualität), board3d.js (Inseln), pieces.js, dice.js, effects.js, textures.js
 │   ├── audio/     audio.js (Effekte, Instrumente, Epochen-Musik)
-│   ├── ui/        game.js (HUD), actions.js (Entscheidungen), questions.js, minigames.js, tutorial.js, info.js, dom.js
+│   ├── ui/        game.js (HUD), actions.js (Entscheidungen), questions.js, minigames.js, tutorial.js, info.js, qr.js, dom.js
 │   ├── app/       app.js (Menüs, Lobbys), session.js (Spielablauf), prefs.js (Speicher)
 │   ├── net/       net.js (PeerJS-Host/Client, Reconnect)
 │   └── i18n/      de.js (alle Texte)
-├── sim/           simulate.mjs (Bot-Simulation), validate.mjs (Fragenprüfung)
+├── sim/           simulate.mjs (Bot-Simulation), rules.test.mjs (Regeltests), validate.mjs (Fragenprüfung)
 └── tools/         serve.mjs (Testserver), check.mjs (Qualitätsprüfung), make-icons.mjs
 ```
 

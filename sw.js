@@ -1,7 +1,7 @@
 // Service Worker: macht ZEITSTURM nach dem ersten Besuch offline spielbar (lokale Partien).
 // Eigene Dateien: „network-first“ (neue Versionen kommen sofort an, offline greift der Cache).
 // Three.js/PeerJS vom CDN und Schriften: „cache-first“ (feste Versionen ändern sich nie).
-const VERSION = 'zeitsturm-2.0.0';
+const VERSION = 'zeitsturm-2.1.0';
 const CORE = ['./', 'index.html', 'css/style.css', 'manifest.webmanifest', 'js/main.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 const CACHEABLE_HOSTS = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

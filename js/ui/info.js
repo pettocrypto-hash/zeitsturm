@@ -39,6 +39,17 @@ export function openRules() {
   modal({ title: t('rules.title'), icon: '❔', content: body });
 }
 
+// Barrierefreiheit: große Schrift und reduzierte Bewegung als Klassen am Dokument
+export function applyAccessibility() {
+  document.documentElement.classList.toggle('big-text', !!prefs.bigText);
+  document.documentElement.classList.toggle('reduce-motion', !!prefs.reduceMotion);
+}
+
+export function openWhatsNew() {
+  const items = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => h('li', {}, t(`new.v21.${i}`)));
+  modal({ title: t('new.title'), icon: '✨', content: h('div', { class: 'rules' }, h('h3', {}, t('new.v21')), h('ul', {}, items), h('h3', {}, t('new.v2')), h('p', {}, t('new.v2text'))) });
+}
+
 export function openSettings(app) {
   const vol = (key) => {
     const input = h('input', { class: 'range', type: 'range', min: '0', max: '1', step: '0.05', value: String(prefs[key]), 'aria-label': t(`set.${key}`) });
@@ -46,8 +57,14 @@ export function openSettings(app) {
     input.addEventListener('change', () => app.audio.sfx('coin'));
     return input;
   };
-  const haptic = h('button', { type: 'button', class: `toggle-chip ${prefs.haptics ? 'on' : ''}` }, '📳 ', t('set.haptics'));
-  haptic.addEventListener('click', () => { prefs.haptics = !prefs.haptics; haptic.classList.toggle('on', prefs.haptics); setFeedback(app.audio, prefs.haptics); savePrefs(); });
+  const toggle = (key, label, onChange) => {
+    const b = h('button', { type: 'button', class: `toggle-chip ${prefs[key] ? 'on' : ''}`, 'aria-pressed': String(!!prefs[key]) }, label);
+    b.addEventListener('click', () => { prefs[key] = !prefs[key]; b.classList.toggle('on', prefs[key]); b.setAttribute('aria-pressed', String(prefs[key])); savePrefs(); onChange?.(); });
+    return b;
+  };
+  const haptic = toggle('haptics', ['📳 ', t('set.haptics')], () => setFeedback(app.audio, prefs.haptics));
+  const bigText = toggle('bigText', ['🔠 ', t('set.bigText')], applyAccessibility);
+  const motion = toggle('reduceMotion', ['🐢 ', t('set.reduceMotion')], () => { applyAccessibility(); app.render.effects.motionScale = prefs.reduceMotion ? 0.35 : 1; });
   const lang = h('select', { class: 'input', 'aria-label': t('set.lang') }, LANGUAGES.map((l) => h('option', { value: l.id, selected: l.id === getLang() }, l.name)));
   lang.addEventListener('change', () => { prefs.lang = lang.value; savePrefs(); toast(t('set.langReload')); });
   modal({
@@ -60,7 +77,7 @@ export function openSettings(app) {
       h('div', { class: 'field' }, h('label', {}, t('set.sfx')), vol('sfx')),
       h('div', { class: 'field' }, h('label', {}, t('set.botSpeed')),
         seg(['slow', 'normal', 'fast'].map((v) => ({ value: v, label: t(`set.speed.${v}`) })), prefs.botSpeed, (v) => { prefs.botSpeed = v; savePrefs(); if (app.session) app.session.botSpeed = v; })),
-      h('div', { class: 'row wrap' }, haptic),
+      h('div', { class: 'field' }, h('label', {}, t('set.access')), h('div', { class: 'row wrap' }, haptic, bigText, motion)),
       h('div', { class: 'field' }, h('label', {}, t('set.lang')), lang),
       h('div', { class: 'muted small' }, t('set.gameDefaults')),
       btn(['🗑 ', t('set.clearSave')], async () => {

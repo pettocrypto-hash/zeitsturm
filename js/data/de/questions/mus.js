@@ -66,4 +66,15 @@ export default makeBank('mus', [
   mat(1, -1, 'Ordne jedes Instrument seiner Familie zu:', [['Oboe', 'Holzblasinstrument'], ['Posaune', 'Blechblasinstrument'], ['Harfe', 'Zupfinstrument'], ['Pauke', 'Schlaginstrument']], 'Instrumente werden nach ihrer Art der Tonerzeugung eingeteilt.'),
   mat(2, -1, 'Ordne jede Musik- und Tanzrichtung ihrem Ursprungsland zu:', [['Reggae', 'Jamaika'], ['Samba', 'Brasilien'], ['Flamenco', 'Spanien'], ['Tango', 'Argentinien und Uruguay']], 'Der Tango entstand in der Region am Río de la Plata.'),
   mat(1, -1, 'Ordne jeder Vortragsbezeichnung ihre Bedeutung zu:', [['forte', 'laut'], ['piano', 'leise'], ['adagio', 'langsam'], ['presto', 'sehr schnell']], 'Vortragsbezeichnungen sind meist Italienisch.'),
+  // Ergänzung Version 2.1
+  mc(2, 2, 'Welcher Komponist schrieb die Sinfonie in h-Moll, die „Unvollendete“?', ['Franz Schubert', 'Anton Bruckner', 'Gustav Mahler', 'Robert Schumann'], 'Schubert hinterließ nur zwei vollständige Sätze; das Werk wurde erst 1865 uraufgeführt.'),
+  mc(2, 2, 'Welche Pianistin und Komponistin war mit Robert Schumann verheiratet?', ['Clara Schumann', 'Fanny Hensel', 'Alma Mahler', 'Cosima Wagner'], 'Clara Schumann war eine der bedeutendsten Pianistinnen des 19. Jahrhunderts.'),
+  mc(2, 1, 'Wer komponierte das Oratorium „Der Messias“ (Messiah)?', ['Georg Friedrich Händel', 'Johann Sebastian Bach', 'Joseph Haydn', 'Antonio Vivaldi'], 'Händel schrieb es 1741; uraufgeführt wurde es 1742 in Dublin.'),
+  mc(2, 2, 'Aus welchem Land stammte der Komponist Edvard Grieg?', ['Norwegen', 'Schweden', 'Dänemark', 'Finnland'], 'Bekannt ist seine Musik zu Ibsens „Peer Gynt“.'),
+  mc(1, -1, 'Wie nennt man ein Werk für ein Soloinstrument mit Orchesterbegleitung?', ['Solokonzert', 'Sinfonie', 'Sonate', 'Kantate'], 'Etwa ein Violin- oder Klavierkonzert.'),
+  mc(2, -1, 'Welches große Zupfinstrument mit bis zu 47 Saiten gehört zum Sinfonieorchester?', ['Harfe', 'Zither', 'Laute', 'Mandoline'], 'Die Doppelpedalharfe hat meist 47 Saiten.'),
+  mc(2, 4, 'Wer schrieb und sang 1971 das Lied „Imagine“?', ['John Lennon', 'Paul McCartney', 'Bob Dylan', 'Elton John'], 'Lennon veröffentlichte es nach dem Ende der Beatles als Solokünstler.'),
+  tf(2, -1, 'Ein Ton, der eine Oktave höher klingt, hat die doppelte Frequenz.', true, 'Zum Beispiel 440 Hz (a¹) und 880 Hz (a²).'),
+  tf(1, 2, 'Das Saxophon wurde von Adolphe Sax erfunden.', true, 'Der belgische Instrumentenbauer ließ es 1846 patentieren.'),
+  est(2, 1, 'In welchem Jahr wurde Johann Sebastian Bach geboren?', 1685, 5, '', 'Bach kam 1685 in Eisenach zur Welt.'),
 ]);

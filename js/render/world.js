@@ -33,6 +33,12 @@ export class World {
     this.followTarget = null;
     this.followPaused = false;
     this.mode = 'follow';
+    this.timeScale = 1;           // Schnellvorlauf beschleunigt Animationen
+    this.lastActive = performance.now();
+    this.origin = new THREE.Vector3();
+    this.tmpOff = new THREE.Vector3();
+    this.tmpSph = new THREE.Spherical();
+    this.moodTarget = new THREE.Color(0x3b1d5c);
 
     const r = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: qualityName !== 'low', powerPreference: 'high-performance', alpha: false }));
     r.outputColorSpace = THREE.SRGBColorSpace;
@@ -51,7 +57,9 @@ export class World {
     c.maxPolarAngle = 1.38; c.minPolarAngle = 0.15;
     c.enablePan = true; c.panSpeed = 0.8; c.rotateSpeed = 0.7; c.zoomSpeed = 1.1;
     c.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-    c.addEventListener('start', () => { this.followPaused = true; this.onUserCamera?.(); });
+    c.addEventListener('start', () => { this.followPaused = true; this.poke(); this.onUserCamera?.(); });
+    c.addEventListener('change', () => this.poke());
+    canvas.addEventListener('pointerdown', () => this.poke());
 
     this.buildEnvironment();
     this.setupComposer();
@@ -183,10 +191,11 @@ export class World {
   tween(duration, fn, easing = ease.inOut) {
     // Unsichtbare Seite (App im Hintergrund): keine Frames – Animation sofort abschließen, damit nichts hängt
     if (document.hidden) { fn(easing(1), 1); return Promise.resolve(); }
+    this.poke();
     return new Promise((resolve) => {
       const tw = { t0: this.time, duration: Math.max(0.001, duration), fn, easing, resolve };
       // Watchdog: Falls keine Frames kommen (Tab im Hintergrund), trotzdem abschließen
-      tw.guard = setTimeout(() => this.finishTween(tw), duration * 1000 + 1500);
+      tw.guard = setTimeout(() => this.finishTween(tw), (duration / this.timeScale) * 1000 + 1500);
       this.tweens.push(tw);
     });
   }
@@ -236,24 +245,38 @@ export class World {
     const k = 1 - Math.pow(0.0025, dt);
     let target, dist;
     const portrait = window.innerWidth < window.innerHeight;
-    if (this.mode === 'overview') { target = new THREE.Vector3(0, 0, 0); dist = portrait ? 235 : 168; }
+    if (this.mode === 'overview') { target = this.origin; dist = portrait ? 235 : 168; }
     else if (this.mode === 'focus' && this.focusPoint) { target = this.focusPoint; dist = this.focusDistance; }
     else if (this.followTarget) { target = this.followTarget(); dist = portrait ? 46 : 38; }
     if (!target) return;
+    const before = c.target.distanceToSquared(target);
     c.target.lerp(target, k);
-    const off = this.camera.position.clone().sub(c.target);
+    const off = this.tmpOff.copy(this.camera.position).sub(c.target);
     const cur = off.length();
     const desiredPolar = this.mode === 'overview' ? 0.62 : this.mode === 'focus' && this.focusPolar ? this.focusPolar : 0.95;
-    const sph = new THREE.Spherical().setFromVector3(off);
+    const sph = this.tmpSph.setFromVector3(off);
     sph.radius = cur + (dist - cur) * k;
     sph.phi = sph.phi + (desiredPolar - sph.phi) * k * 0.6;
     off.setFromSpherical(sph);
     this.camera.position.copy(c.target).add(off);
+    // Kamera noch in Bewegung? Dann kein Energiespar-Takt
+    if (before > 0.01 || Math.abs(dist - cur) > 0.3) this.poke();
   }
+
+  // Aktivität melden (Animation, Eingabe, Kamerafahrt): volle Bildrate für die nächsten Sekunden
+  poke() { this.lastActive = performance.now(); }
+
+  // Farbstimmung der aktuell betrachteten Epoche (Himmel und Nebel)
+  setMood(color) { this.moodTarget.set(color); }
 
   frame() {
     if (this.lost) return;
-    const dt = Math.min(0.05, this.clock.getDelta());
+    // Energiesparen: Wenn sich länger nichts bewegt, nur jedes zweite Bild zeichnen (30 statt 60 FPS).
+    // Die Zeit wird erst danach gemessen, damit übersprungene Bilder keine Animationszeit verlieren.
+    this.throttled = !this.tweens.length && !this.cinematic && performance.now() - this.lastActive > 2500;
+    this.skipToggle = !this.skipToggle;
+    if (this.throttled && this.skipToggle) return;
+    const dt = Math.min(0.05, this.clock.getDelta()) * this.timeScale;
     this.time += dt;
     // Tweens
     for (let i = this.tweens.length - 1; i >= 0; i--) {
@@ -268,6 +291,8 @@ export class World {
     this.sun.target.position.copy(this.controls.target);
     this.sun.position.copy(this.controls.target).add(this.sunOffset);
     this.stars.rotation.y += dt * 0.004;
+    const tint = this.sky.material.uniforms.tint.value;
+    if (!tint.equals(this.moodTarget)) { tint.lerp(this.moodTarget, Math.min(1, dt * 0.8)); this.hemi.groundColor.copy(tint).multiplyScalar(0.5); }
     if (this.q.bloom) this.composer.render(dt);
     else this.renderer.render(this.scene, this.camera);
     this.adapt(dt);
@@ -275,7 +300,9 @@ export class World {
 
   // Adaptive Auflösung: hält die Bildrate auf Handys stabil
   adapt(dt) {
-    this.frames++; this.fpsTime += dt;
+    // Im Energiespar-Takt nicht messen, sonst würde die Auflösung unnötig gesenkt
+    if (this.throttled) { this.frames = 0; this.fpsTime = 0; return; }
+    this.frames++; this.fpsTime += dt / this.timeScale;
     if (this.fpsTime < 2) return;
     this.fps = this.frames / this.fpsTime;
     this.frames = 0; this.fpsTime = 0;

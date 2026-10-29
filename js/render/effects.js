@@ -14,7 +14,7 @@ export class Effects {
   }
 
   burst(pos, color = '#2fe6ff', count = 60, speed = 7, life = 1.1) {
-    const n = Math.max(8, Math.round(count * this.q.particles));
+    const n = Math.max(6, Math.round(count * this.q.particles * (this.motionScale ?? 1)));
     const geo = new THREE.BufferGeometry();
     const p = new Float32Array(n * 3);
     const v = [];

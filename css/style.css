@@ -105,6 +105,7 @@ h3 { margin: 12px 0 6px; font-size: 17px; }
 .btn .ico { font-size: 20px; line-height: 1; }
 .icon-btn { width: 46px; height: 46px; min-height: 46px; padding: 0; border-radius: 14px; font-size: 20px; }
 .btn.selected { outline: 3px solid var(--accent); outline-offset: 1px; }
+.icon-btn.selected { background: rgba(47, 230, 255, .2); }
 
 /* ---------- Formulare ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -254,6 +255,36 @@ h3 { margin: 12px 0 6px; font-size: 17px; }
 .emoji-bar { display: flex; gap: 6px; flex-wrap: wrap; }
 .emoji-bar button { width: 46px; height: 46px; font-size: 24px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.05); cursor: pointer; }
 
+/* QR-Code der Einladung */
+.qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 0 4px; }
+.qr { width: min(52vw, 210px); height: auto; border-radius: 12px; image-rendering: pixelated; box-shadow: 0 0 0 4px rgba(255,255,255,.08); }
+
+/* Würfelergebnis */
+.dice-chip { position: absolute; left: 50%; top: calc(214px + var(--safe-t)); transform: translateX(-50%); z-index: 24; pointer-events: none;
+  font-family: var(--font-display); font-size: 20px; letter-spacing: .06em; padding: 10px 20px; border-radius: 16px;
+  background: rgba(5, 6, 15, .78); border: 1px solid var(--line-strong); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: chip 2s ease forwards; white-space: nowrap; }
+.dice-chip.doubles { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 22px rgba(255, 200, 58, .45); }
+
+/* Wegoptionen mit Vorschau */
+.path-option { justify-content: flex-start; text-align: left; min-height: 60px; padding: 8px 14px; }
+.path-btn { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.path-main { font-weight: 800; }
+.path-sub { font-size: 13px; font-weight: 600; color: var(--gold); }
+.grid2 .path-btn { align-items: center; text-align: center; }
+
+/* Barrierefreiheit */
+html.big-text #ui { zoom: 1.12; }
+/* Bewegung reduzieren (Schalter in den Einstellungen, Voreinstellung = Systemeinstellung): keine Bewegungen.
+   Hinweise bleiben trotzdem gleich lange sichtbar und werden nur ein- und ausgeblendet. */
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation: none !important; transition: none !important; }
+@keyframes still { 0% { opacity: 0; } 8%, 85% { opacity: 1; } 100% { opacity: 0; } }
+html.reduce-motion .banner { animation: still 1.9s linear forwards !important; }
+html.reduce-motion .toast { animation: still 3.4s linear forwards !important; }
+html.reduce-motion .dice-chip { animation: still 2s linear forwards !important; }
+html.reduce-motion .epoch-chip { animation: still 2.2s linear forwards !important; }
+html.reduce-motion .emoji-float { transform: translateX(-50%); animation: still 2.2s linear forwards !important; }
+
 /* Epochen-Hinweis beim Betreten einer neuen Insel */
 .epoch-chip { position: absolute; left: 50%; top: calc(170px + var(--safe-t)); transform: translateX(-50%); z-index: 24; pointer-events: none;
   font-family: var(--font-display); font-size: 15px; letter-spacing: .1em; padding: 8px 18px; border-radius: 999px; border: 1px solid;
@@ -337,8 +368,4 @@ h3 { margin: 12px 0 6px; font-size: 17px; }
   .modal { border-radius: 24px; max-height: 86dvh; }
   .modal .grab { display: none; }
   .toasts { top: 80px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

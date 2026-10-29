@@ -67,4 +67,15 @@ export default makeBank('pop', [
   mat(1, -1, 'Ordne jeder Autorin bzw. jedem Autor ein Werk zu:', [['Miguel de Cervantes', 'Don Quijote'], ['Mary Shelley', 'Frankenstein'], ['J. R. R. Tolkien', 'Der Herr der Ringe'], ['George Orwell', '1984']], 'Vier Bücher, die Popkultur prägten.'),
   mat(2, -1, 'Ordne jedem Künstler seine Stilrichtung zu:', [['Pablo Picasso', 'Kubismus'], ['Claude Monet', 'Impressionismus'], ['Salvador Dalí', 'Surrealismus'], ['Andy Warhol', 'Pop-Art']], 'Der Name „Impressionismus“ geht auf Monets Bild „Impression, soleil levant“ zurück.'),
   mat(3, 4, 'Ordne jeder Spielfigur die Firma zu, die sie zuerst herausbrachte:', [['Mario', 'Nintendo'], ['Sonic', 'Sega'], ['Pac-Man', 'Namco'], ['Lara Croft', 'Core Design']], 'Lara Croft erschien 1996 im Spiel „Tomb Raider“.'),
+  // Ergänzung Version 2.1
+  mc(1, 5, 'Welcher Film von 1993 ließ Dinosaurier mit Computeranimation lebendig werden?', ['Jurassic Park', 'King Kong', 'Godzilla', 'Der weiße Hai'], 'Regie führte Steven Spielberg; die Effekte setzten neue Maßstäbe.'),
+  mc(2, 5, 'Welcher Film spielte als erster weltweit mehr als 2 Milliarden US-Dollar ein?', ['Avatar', 'Titanic', 'Star Wars: Das Erwachen der Macht', 'Avengers: Endgame'], 'Avatar überschritt die Marke im Januar 2010; Titanic erst später mit einer Wiederaufführung.'),
+  mc(1, -1, 'Welche Comicfigur ist ein gallischer Krieger, der dank Zaubertrank unbesiegbar ist?', ['Asterix', 'Tim', 'Lucky Luke', 'Spirou'], 'Asterix wurde 1959 von René Goscinny und Albert Uderzo erfunden.'),
+  mc(2, 4, 'Wer erfand die „Peanuts“ mit Charlie Brown und Snoopy?', ['Charles M. Schulz', 'Walt Disney', 'Hergé', 'Stan Lee'], 'Schulz zeichnete den Comicstrip von 1950 bis 2000.'),
+  mc(2, 2, 'Wer schrieb den Roman „Krieg und Frieden“?', ['Lew Tolstoi', 'Fjodor Dostojewski', 'Anton Tschechow', 'Iwan Turgenew'], 'Der Roman spielt zur Zeit der Napoleonischen Kriege und erschien 1867–1869.'),
+  mc(2, 2, 'Welcher Maler schuf das Bild „Der Schrei“?', ['Edvard Munch', 'Vincent van Gogh', 'Gustav Klimt', 'Egon Schiele'], 'Munch malte mehrere Fassungen, die erste 1893.'),
+  mc(1, 5, 'Aus welchem Land stammen die Pokémon-Spiele ursprünglich?', ['Japan', 'USA', 'Südkorea', 'China'], 'Die ersten Pokémon-Spiele erschienen 1996 in Japan für den Game Boy.'),
+  tf(2, 2, 'Das Gemälde „Die Sternennacht“ stammt von Claude Monet.', false, 'Es stammt von Vincent van Gogh (1889).'),
+  tf(1, -1, 'Ein „Sequel“ ist die Fortsetzung eines Films, Buchs oder Spiels.', true, 'Eine Vorgeschichte heißt dagegen „Prequel“.'),
+  est(2, 5, 'In welchem Jahr kam der erste Teil von Peter Jacksons „Der Herr der Ringe“-Trilogie in die Kinos?', 2001, 2, '', '„Die Gefährten“ startete im Dezember 2001.'),
 ]);

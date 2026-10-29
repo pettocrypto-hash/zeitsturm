@@ -19,8 +19,9 @@ const choice = (arr) => arr[Math.floor(rnd() * arr.length)];
 export const BOT_STYLES = ['scholar', 'politician', 'saboteur'];
 // Sabotage- und Spionagekarten nach Nutzen für den Spielenden selbst
 const SAB_PRIORITY = ['s_inf', 'sp_dossier', 's_star', 's_skip', 'sp_steal', 's_card', 's_back', 'sp_copy', 'sp_peek'];
-let ACCURACY = 0.72;
-export function setBotAccuracy(a) { ACCURACY = a; }
+// Bot-Stärke (Einstellung pro Partie): Trefferquote bei Fragen und Leistung in Minispielen
+export const BOT_LEVELS = { leicht: 0.58, normal: 0.72, stark: 0.85 };
+const accuracy = (s) => BOT_LEVELS[s.settings?.botLevel] ?? BOT_LEVELS.normal;
 
 function correctAnswer(q) {
   switch (q.type) {
@@ -38,8 +39,8 @@ function wrongAnswer(q, removed = []) {
     default: { const n = (q.pairs || q.a).length; const a = [...Array(n).keys()]; [a[0], a[1]] = [a[1], a[0]]; return a; }
   }
 }
-function guess(q, removed) {
-  const p = ACCURACY - 0.1 * (q.diff - 1) + (q.type === 'tf' ? 0.08 : 0) - (q.type === 'order' || q.type === 'match' ? 0.1 : 0);
+function guess(s, q, removed) {
+  const p = accuracy(s) - 0.1 * (q.diff - 1) + (q.type === 'tf' ? 0.08 : 0) - (q.type === 'order' || q.type === 'match' ? 0.1 : 0);
   if (q.type === 'mc' && removed.length >= 2) return chance(Math.max(p, 0.6)) ? 0 : wrongAnswer(q, removed);
   if (q.type === 'est') {
     // Schätzungen streuen um den richtigen Wert
@@ -74,7 +75,12 @@ function goalsFor(s, p) {
     for (const n of NODES) if (n.type === 'topic' && !s.mods.removed.includes(n.id) && missing.includes(effectiveTopic(s, n.id))) goals.push(n.id);
   }
   const open = (id) => !s.mods.removed.includes(id);
-  if (p.style === 'politician' && p.influence >= 9) for (const n of NODES) if (n.type === 'market' && open(n.id)) goals.push(n.id);
+  if (p.style === 'politician') {
+    // Zum Markt nur, wenn das Geld für ein Fragment oder einen fehlenden Stern reicht.
+    const pr = marketPrices(s);
+    const shopping = (p.fragments < GOAL_FRAGMENTS && p.influence >= pr.fragment) || (missing.length && p.influence >= pr.star + 2);
+    if (shopping) for (const n of NODES) if (n.type === 'market' && open(n.id)) goals.push(n.id);
+  }
   if (p.style === 'saboteur' && p.cards.length < 2) for (const n of NODES) if (n.type === 'archive' && open(n.id)) goals.push(n.id);
   return goals.length ? goals : [BOARD.hub];
 }
@@ -171,7 +177,7 @@ export function botAction(s, pid, { timeout = false } = {}) {
       if (pd.kind === 'challenge' && pd.stage === 0 && !pd.double && p.cards.includes('j_double') && chance(0.7)) return me('useJoker', { card: 'j_double' });
       if (q.type === 'mc' && !pd.removed.length && q.diff >= 2 && p.cards.includes('j_fifty') && chance(0.6)) return me('useJoker', { card: 'j_fifty' });
       if (!pd.second && pd.kind === 'challenge' && p.cards.includes('j_second') && chance(0.6)) return me('useJoker', { card: 'j_second' });
-      return me('answer', { answer: guess(q, pd.removed) });
+      return me('answer', { answer: guess(s, q, pd.removed) });
     }
     case 'reward': {
       const missing = p.stars[pd.topic] === 0;
@@ -191,7 +197,7 @@ export function botAction(s, pid, { timeout = false } = {}) {
     }
     case 'duel': {
       const q = getQuestion(pd.qid);
-      return me('answer', { answer: timeout ? null : guess(q, []) });
+      return me('answer', { answer: timeout ? null : guess(s, q, []) });
     }
     case 'motion': {
       const best = pd.options.map((id) => [id, motionUtility(s, p, id) + rnd() * 0.5]).sort((a, b) => b[1] - a[1])[0][0];
@@ -214,7 +220,7 @@ export function botAction(s, pid, { timeout = false } = {}) {
       return me('vote', { side, bid, card });
     }
     case 'concert': {
-      const sc = timeout ? 0 : Math.min(1, Math.max(0, 0.35 + rnd() * 0.65 - (pd.level - 1) * 0.08));
+      const sc = timeout ? 0 : Math.min(1, Math.max(0, 0.35 + rnd() * 0.65 - (pd.level - 1) * 0.08 + (accuracy(s) - 0.72)));
       return me('minigame', { score: sc });
     }
     case 'market': {

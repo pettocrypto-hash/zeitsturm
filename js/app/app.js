@@ -11,10 +11,13 @@ import { HostNet, ClientNet, makeCode, normalizeCode, makeToken } from '../net/n
 import { GameUI } from '../ui/game.js';
 import { colorOf, playerTag } from '../ui/actions.js';
 import { FIGURE_ICONS } from '../render/pieces.js';
-import { openRules, openSettings } from '../ui/info.js';
+import { openRules, openSettings, openWhatsNew } from '../ui/info.js';
 import { Tutorial } from '../ui/tutorial.js';
+import { qrCanvas } from '../ui/qr.js';
 
 const BOT_NAMES = ['Ada', 'Kleo', 'Hypatia', 'Leo', 'Marco', 'Nefertiti', 'Galilei', 'Curie', 'Tesla', 'Ibn Battuta'];
+export const APP_VERSION = '2.1';
+const QUESTION_EVENTS = new Set(['quiz', 'challengeStep', 'duelStart', 'duelRound']);
 
 export class App {
   constructor({ render, audio }) {
@@ -27,6 +30,48 @@ export class App {
     this.tutorial = null;
     setFeedback(audio, prefs.haptics);
     window.addEventListener('beforeunload', () => flushSave());
+    // Android-Zurück-Taste / Wischgeste: erst Dialoge schließen, dann nachfragen statt das Spiel zu verlassen
+    window.addEventListener('popstate', () => this.onBack());
+  }
+
+  guardBack() {
+    if (history.state?.zeitsturm) return;
+    history.pushState({ zeitsturm: true }, '');
+  }
+
+  async onBack() {
+    const backs = document.querySelectorAll('.backdrop');
+    if (backs.length) {
+      const close = backs[backs.length - 1].querySelector('.modal-head .btn.ghost');
+      close?.click();
+      if (backs.length > 1 || this.session || this.net || !this.screen?.classList.contains('menu-screen')) this.guardBack();
+      return;
+    }
+    if (this.session) {
+      this.guardBack();
+      if (await ask(t('menu.leaveConfirm'), t('menu.leave'), t('common.cancel'))) this.leaveGame();
+      return;
+    }
+    if (this.net) {
+      this.guardBack();
+      if (await ask(t('lobby.closeConfirm'), t('common.yes'), t('common.no'))) { saveOnline(null); this.showMenu(); }
+      return;
+    }
+    if (this.screen && !this.screen.classList.contains('menu-screen')) this.showMenu();
+  }
+
+  // Fragen-Gedächtnis: gestellte Fragen auf diesem Gerät merken (kommen in späteren Partien seltener)
+  rememberQuestions(events) {
+    let changed = false;
+    for (const e of events) {
+      if (!QUESTION_EVENTS.has(e.type) || !e.qid || prefs.seenQuestions.includes(e.qid)) continue;
+      prefs.seenQuestions.push(e.qid);
+      changed = true;
+    }
+    if (!changed) return;
+    if (prefs.seenQuestions.length > 600) prefs.seenQuestions.splice(0, prefs.seenQuestions.length - 600);
+    clearTimeout(this.seenTimer);
+    this.seenTimer = setTimeout(savePrefs, 3000);
   }
 
   // ------------------------------------------------------------------ Bildschirm-Wechsel
@@ -34,6 +79,7 @@ export class App {
     this.screen?.remove();
     this.screen = el;
     if (el) UI().appendChild(el);
+    if (el && !el.classList.contains('menu-screen')) this.guardBack();
   }
 
   menuCamera() {
@@ -52,20 +98,25 @@ export class App {
     const params = new URLSearchParams(location.search);
     const room = normalizeCode(params.get('room'));
     if (room) history.replaceState(null, '', location.pathname);
-    const el = h('div', { class: 'screen clear' }, h('div', { class: 'screen-inner' },
+    const el = h('div', { class: 'screen clear menu-screen' }, h('div', { class: 'screen-inner' },
       h('div', { class: 'logo' }, 'ZEITSTURM'),
       h('p', { class: 'tagline' }, t('menu.tagline')),
+      !prefs.tutorialSeen && !save?.state ? h('div', { class: 'card tight row' },
+        h('span', { style: { fontSize: '26px' } }, '🎓'),
+        h('div', { class: 'grow small' }, h('b', {}, t('menu.newHere')), h('div', { class: 'muted' }, t('menu.newHereText'))),
+        btn(t('menu.tutorialShort'), () => this.startTutorial(), 'small primary')) : null,
       save?.state && save.state.winner == null ? btn(['▶ ', t('menu.resume', { round: save.state.round })], () => this.resume(save), 'primary big block') : null,
       online && !save?.state ? btn(['🔁 ', t('menu.rejoin', { code: online.code })], () => this.join(online.code, online.name, online.token), 'primary big block') : null,
       btn(['👥 ', t('menu.local')], () => this.showLocalSetup(), save?.state ? 'big block' : 'primary big block'),
       btn(['🌐 ', t('menu.online')], () => this.showOnline(room), 'big block'),
-      btn(['🎓 ', t('menu.tutorial')], () => this.startTutorial(), 'big block'),
+      prefs.tutorialSeen || save?.state ? btn(['🎓 ', t('menu.tutorial')], () => this.startTutorial(), 'big block') : null,
       h('div', { class: 'grid2' },
         btn(['❔ ', t('menu.rules')], () => this.openRules(), 'block'),
         btn(['⚙ ', t('menu.settings')], () => this.openSettings(), 'block')),
       document.fullscreenEnabled ? btn(['⛶ ', t('menu.fullscreen')], () => this.toggleFullscreen(), 'ghost block') : null,
       (this.installSlot = h('div', { class: 'col' }, this.installPrompt ? btn(['📲 ', t('menu.install')], () => this.install(), 'ghost block') : null)),
-      h('p', { class: 'muted small center' }, t('menu.footer'))));
+      h('p', { class: 'muted small center' }, t('menu.footer')),
+      h('p', { class: 'muted small center' }, `Version ${APP_VERSION} · `, h('a', { href: '#', style: { color: 'var(--accent)' }, onClick: (e) => { e.preventDefault(); openWhatsNew(); } }, t('menu.whatsNew')))));
     this.setScreen(el);
     if (room) this.showOnline(room);
   }
@@ -92,7 +143,7 @@ export class App {
       { kind: 'human', name: prefs.name || t('setup.player', { n: 1 }), color: prefs.color, figure: prefs.figure, style: 'scholar' },
       { kind: 'bot', name: BOT_NAMES[0], color: PLAYER_COLORS.find((c) => c.id !== prefs.color).id, figure: FIGURES.find((f) => f !== prefs.figure), style: 'scholar' },
     ];
-    const cfg = { maxRounds: prefs.maxRounds, turnTime: prefs.turnTime, difficulty: prefs.difficulty, topics: [...prefs.topics] };
+    const cfg = { maxRounds: prefs.maxRounds, turnTime: prefs.turnTime, difficulty: prefs.difficulty, botLevel: prefs.botLevel, topics: [...prefs.topics] };
     const body = h('div', { class: 'col' });
     const render = () => {
       clear(body);
@@ -106,7 +157,7 @@ export class App {
       body.appendChild(btn(['🚀 ', t('setup.start')], () => {
         const human = seats.find((s) => s.kind === 'human');
         if (human) { prefs.name = human.name; prefs.color = human.color; prefs.figure = human.figure; }
-        Object.assign(prefs, { maxRounds: cfg.maxRounds, turnTime: cfg.turnTime, difficulty: cfg.difficulty, topics: cfg.topics });
+        Object.assign(prefs, { maxRounds: cfg.maxRounds, turnTime: cfg.turnTime, difficulty: cfg.difficulty, botLevel: cfg.botLevel, topics: cfg.topics });
         savePrefs();
         this.startLocal(seats, cfg);
       }, 'primary big block'));
@@ -121,7 +172,7 @@ export class App {
     this.teardown();
     clearGame();
     const players = seats.map((s) => ({ name: s.name.trim() || '?', color: s.color, figure: s.figure, isBot: s.kind === 'bot', style: s.style }));
-    const state = createGame({ players, seed: tutorial ? 20251 : makeSeed(), settings: { ...cfg, stormRound: Math.round(cfg.maxRounds * 2 / 3) } });
+    const state = createGame({ players, seed: tutorial ? 20251 : makeSeed(), settings: { ...cfg, stormRound: Math.round(cfg.maxRounds * 2 / 3) }, avoid: prefs.seenQuestions });
     const humanSeats = seats.map((s, i) => (s.kind === 'human' ? i : -1)).filter((i) => i >= 0);
     this.lastLocal = { seats, cfg };
     this.launch(new Session({ mode: 'local', state, humanSeats, tutorial }));
@@ -131,9 +182,11 @@ export class App {
     this.setScreen(null);
     this.session = session;
     session.botSpeed = prefs.botSpeed;
+    session.on((e) => { if (e.type === 'update') this.rememberQuestions(e.events); });
     this.render.world.controls.autoRotate = false;
     this.game = new GameUI(this, session);
     session.start();
+    this.guardBack();
     this.requestWakeLock();
   }
 
@@ -189,7 +242,7 @@ export class App {
     this.setScreen(h('div', { class: 'screen' }, h('div', { class: 'screen-inner' }, h('div', { class: 'logo', style: { fontSize: '28px' } }, t('online.creating')), h('div', { class: 'boot-ring', style: { margin: '0 auto' } }))));
     const lobby = reuse || {
       code: makeCode(),
-      settings: { maxRounds: prefs.maxRounds, turnTime: prefs.turnTime, difficulty: prefs.difficulty, topics: [...prefs.topics] },
+      settings: { maxRounds: prefs.maxRounds, turnTime: prefs.turnTime, difficulty: prefs.difficulty, botLevel: prefs.botLevel, topics: [...prefs.topics] },
       seats: [
         { kind: 'human', name, color: prefs.color, figure: prefs.figure, ready: true, host: true, token: makeToken(), connected: true },
         { kind: 'open' }, { kind: 'open' }, { kind: 'open' },
@@ -324,6 +377,7 @@ export class App {
     body.appendChild(h('div', { class: 'card col center' },
       h('div', { class: 'muted small' }, t('lobby.code')),
       h('div', { class: 'roomcode' }, L.code),
+      h('div', { class: 'qr-wrap' }, this.qrFor(shareUrl), h('div', { class: 'muted small' }, '📱 ', t('lobby.scan'))),
       h('div', { class: 'grid2' },
         btn(['📋 ', t('lobby.copy')], async () => { try { await navigator.clipboard.writeText(shareUrl); toast(t('lobby.copied'), 'good'); } catch (e) { toast(shareUrl); } }, 'ghost'),
         navigator.share ? btn(['📤 ', t('lobby.share')], () => navigator.share({ title: 'ZEITSTURM', text: t('lobby.shareText', { code: L.code }), url: shareUrl }).catch(() => {}), 'ghost') : null)));
@@ -359,7 +413,7 @@ export class App {
     const seats = L.seats.filter((s) => s.kind !== 'open');
     seats.forEach((s, pid) => { s.pid = pid; });
     const players = seats.map((s) => ({ name: s.name, color: s.color, figure: s.figure, isBot: s.kind === 'bot', style: s.style }));
-    const state = createGame({ players, seed: makeSeed(), settings: { ...L.settings, stormRound: Math.round(L.settings.maxRounds * 2 / 3) } });
+    const state = createGame({ players, seed: makeSeed(), settings: { ...L.settings, stormRound: Math.round(L.settings.maxRounds * 2 / 3) }, avoid: prefs.seenQuestions });
     for (const c of this.net.clients()) { c.pid = L.seats[c.seat]?.pid ?? null; }
     const room = { code: L.code, seats: L.seats.map((s) => ({ kind: s.kind, token: s.token, pid: s.pid, name: s.name, color: s.color, figure: s.figure, style: s.style })) };
     clearGame();
@@ -502,6 +556,14 @@ export class App {
   }
 
   // ------------------------------------------------------------------ Sonstiges
+  prefsBotSpeed() { return prefs.botSpeed; }
+  reducedMotion() { return !!prefs.reduceMotion; }
+
+  qrFor(url) {
+    try { const c = qrCanvas(url, 240); c.className = 'qr'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', t('lobby.scan')); return c; }
+    catch (e) { return null; }
+  }
+
   openRules() { openRules(); }
   openSettings() { openSettings(this); }
 
@@ -609,6 +671,7 @@ function settingsEditor(cfg, onChange) {
     h('div', { class: 'field' }, h('label', {}, t('set.rounds')), seg([15, 20, 30].map((n) => ({ value: n, label: String(n) })), cfg.maxRounds, (v) => { cfg.maxRounds = v; ch(); })),
     h('div', { class: 'field' }, h('label', {}, t('set.turnTime')), seg([0, 60, 90, 120].map((n) => ({ value: n, label: n ? `${n}s` : t('set.off') })), cfg.turnTime, (v) => { cfg.turnTime = v; ch(); })),
     h('div', { class: 'field' }, h('label', {}, t('set.difficulty')), seg(['leicht', 'normal', 'schwer'].map((d) => ({ value: d, label: t(`diff.${d}`) })), cfg.difficulty, (v) => { cfg.difficulty = v; ch(); })),
+    h('div', { class: 'field' }, h('label', {}, t('set.botLevel')), seg(['leicht', 'normal', 'stark'].map((d) => ({ value: d, label: t(`botlevel.${d}`) })), cfg.botLevel || 'normal', (v) => { cfg.botLevel = v; ch(); })),
     h('div', { class: 'field' }, h('label', {}, t('set.topics')), topics));
 }
 

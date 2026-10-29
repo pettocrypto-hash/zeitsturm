@@ -29,6 +29,7 @@ export class GameUI {
     this.chatLog = [];
     this.lastTick = -1;
     this.lastActive = -1;
+    this.speed = 1;
     session.waitIdle = () => this.idle();
     this.build();
     this.R.pieces.setup(this.view.players, colorOf);
@@ -55,8 +56,10 @@ export class GameUI {
       this.roundEl, this.stormEl, h('div', { class: 'grow' }), this.timerEl,
       btn('☰', () => this.openMenu(), 'icon-btn', { 'aria-label': t('hud.menu') }));
     this.playersEl = h('div', { class: 'players' });
+    this.speedBtn = btn('⏩', () => this.toggleSpeed(), 'icon-btn', { 'aria-label': t('hud.speed'), title: t('hud.speed'), 'aria-pressed': 'false' });
     this.side = h('div', { class: 'hud-side' },
       this.camBtn,
+      this.speedBtn,
       btn('📜', () => this.openLog(), 'icon-btn', { 'aria-label': t('hud.log') }),
       online ? btn('💬', () => this.openChat(), 'icon-btn', { 'aria-label': t('hud.chat') }) : null,
       btn('❔', () => this.app.openRules(), 'icon-btn', { 'aria-label': t('hud.rules') }));
@@ -67,6 +70,7 @@ export class GameUI {
   }
 
   destroy() {
+    this.R.world.timeScale = 1;
     clearInterval(this.timerInt);
     this.unsub?.();
     this.root.remove();
@@ -75,6 +79,20 @@ export class GameUI {
     this.canvasOff?.();
     document.querySelectorAll('.backdrop, .curtain, .coach, .toasts, .banner, .emoji-float').forEach((e) => e.remove());
   }
+
+  // ------------------------------------------------------------------ Tempo
+  // Schnellvorlauf: Animationen, Pausen und Bots laufen schneller – praktisch, wenn man auf andere wartet
+  toggleSpeed() {
+    this.speed = this.speed > 1 ? 1 : 2.5;
+    this.R.world.timeScale = this.speed;
+    this.session.botSpeed = this.speed > 1 ? 'fast' : this.app.prefsBotSpeed();
+    this.speedBtn.classList.toggle('selected', this.speed > 1);
+    this.speedBtn.setAttribute('aria-pressed', String(this.speed > 1));
+    this.audio.sfx('speed');
+    toast(this.speed > 1 ? t('hud.speedOn') : t('hud.speedOff'));
+  }
+
+  pause(ms) { return sleep(ms / (this.speed || 1)); }
 
   // ------------------------------------------------------------------ Ablaufsteuerung
   idle() {
@@ -113,6 +131,10 @@ export class GameUI {
     this.R.pieces.sync(s.players);
     this.renderPlayers();
     this.renderTop();
+    // Portal-Spannung: Fortschritt des Spielers, der dem Portal-Sieg am nächsten ist
+    const need = s.settings.topics.length || 6;
+    const progress = Math.max(...s.players.map((p) => (isEligible(s, p) ? 1 : (starColors(p) / need) * 0.5 + (Math.min(p.fragments, GOAL_FRAGMENTS) / GOAL_FRAGMENTS) * 0.5)));
+    this.R.board.setPortalTension(progress >= 1 ? 1 : progress * 0.85);
     if (s.winner != null) { this.clearDock(); this.app.showEnd(s, this); return; }
     this.renderDock();
     this.app.tutorial?.onState(s, this);
@@ -230,11 +252,12 @@ export class GameUI {
   reopenQuestion() { if (this.qContent) { this.qmodal = null; this.openQuestion(this.qContent, this.qTitle); } }
   closeQuestion() { if (this.qmodal) { this.qmodal.back.remove(); this.qmodal = null; } }
 
-  highlightPath(options) {
+  highlightPath(options, landings = []) {
     this.pathMode = options;
     this.R.board.highlight(options);
+    if (landings.length) this.R.board.markLanding([...new Set(landings)]);
     const p = this.view.players[this.view.current];
-    if (p) this.R.world.focusOn(nodeTop(p.pos), 34);
+    if (p) this.R.world.focusOn(nodeTop(p.pos), 38);
   }
   clearPath() { this.pathMode = null; this.R.board.clearHighlight(); }
 
@@ -286,7 +309,7 @@ export class GameUI {
       case 'gameStart':
         A.startMusic('hub');
         banner(t('ev.gameStart'));
-        await R.world.flyover();
+        if (!this.app.reducedMotion()) await R.world.flyover();
         break;
       case 'roundStart':
         if (e.round > 1) toast(t('ev.round', { n: e.round }));
@@ -297,7 +320,7 @@ export class GameUI {
         R.effects.lightning();
         A.sfx('storm'); vibrate([60, 40, 120]);
         A.setTension(0.35);
-        await sleep(1600);
+        await this.pause(1600);
         break;
       case 'turnStart': {
         P.setActive(e.player);
@@ -312,20 +335,20 @@ export class GameUI {
         A.sfx('turn');
         if (local(e.player)) { vibrate(25); banner(this.session.humanSeats.size > 1 ? t('ev.yourTurnNamed', { name: p.name }) : t('ev.yourTurn')); }
         else banner(t('ev.turnOf', { name: p.name }));
-        await sleep(700);
+        await this.pause(700);
         break;
       }
-      case 'skip': toast(t('ev.skip', { name: name(e.player) }), 'bad'); await sleep(500); break;
+      case 'skip': toast(t('ev.skip', { name: name(e.player) }), 'bad'); await this.pause(500); break;
       case 'tailwind': toast(t('ev.tailwind', { name: name(e.player) }), 'good'); break;
       case 'roll': {
         A.sfx('roll');
         const origin = P.position(e.player);
         await R.dice.roll(e.values, origin, (k) => A.sfx('bounce', k));
-        this.floatText(e.player, `🎲 ${e.total}`);
+        this.diceChip(e);
         break;
       }
       case 'doubles':
-        A.sfx('coin'); vibrate([20, 30, 20]);
+        A.sfx('doubles'); vibrate([20, 30, 20]);
         R.effects.burst(P.position(e.player).add(new THREE.Vector3(0, 2, 0)), '#ffc83a', 70, 8);
         toast(t('ev.doubles', { name: name(e.player) }) + (local(e.player) && e.card ? ` – ${t(`card.${e.card}.name`)}` : ''), 'gold');
         break;
@@ -349,7 +372,7 @@ export class GameUI {
         break;
       }
       case 'stream': {
-        A.sfx('portal');
+        A.sfx('stream');
         const pts = e.path.map((n) => nodeTop(n));
         for (const p of pts) R.effects.burst(p, '#2aa8ff', 14, 2.5, 0.8);
         toast(t('ev.stream', { name: name(e.player) }), 'good');
@@ -357,9 +380,18 @@ export class GameUI {
         break;
       }
       case 'archive':
-        A.sfx('card');
+        A.sfx('archive');
         R.effects.burst(P.position(e.player), '#f0a35e', 40);
         toast(local(e.player) && e.card ? t('ev.archiveCard', { card: t(`card.${e.card}.name`) }) : t('ev.archive', { name: name(e.player) }), 'gold');
+        break;
+      case 'discard':
+        if (local(e.player) && e.card) { A.sfx('discard'); toast(t('ev.discard', { card: t(`card.${e.card}.name`) }), 'bad'); }
+        break;
+      case 'firstClear':
+        A.sfx('firstClear'); vibrate([30, 30, 30, 30, 80]);
+        banner(t('ev.firstClear'), t('ev.firstClearSub', { name: name(e.player), epoch: t(`epoch.${EPOCHS[e.island]}`) }));
+        R.effects.confetti(nodeTop(BOARD.islands[e.island].ids.g).add(new THREE.Vector3(0, 2, 0)), 3);
+        await this.pause(1300);
         break;
       case 'land': {
         const top = nodeTop(e.node);
@@ -381,7 +413,7 @@ export class GameUI {
           toast(t('ev.portalPenalty', { name: name(e.player), roll: e.roll }), 'bad');
           R.effects.burst(P.position(e.player), '#ff5470', 70);
           A.sfx('wrong'); vibrate([40, 30, 40]);
-          await sleep(900);
+          await this.pause(900);
         } else {
           toast(t(e.result === 'random' ? 'ev.portalRandom' : 'ev.portalOk', { name: name(e.player), roll: e.roll }), e.result === 'ok' ? 'good' : 'gold');
           A.sfx('portal');
@@ -403,7 +435,7 @@ export class GameUI {
       case 'duelStart':
         A.setTension(1); A.sfx('duel'); vibrate([30, 30, 60]);
         banner(`⚔ ${name(e.a)} vs ${name(e.b)}`, t(`topic.${e.topic}`) + ' · ' + (e.stake === 'fragment' ? t('duel.stakeFrag') : t('duel.stakeInf')));
-        await sleep(1300);
+        await this.pause(1300);
         break;
       case 'duelRound': toast(t('ev.duelTie'), 'gold'); await this.showDuelRound(e, s); break;
       case 'duelResult': await this.showDuelResult(e, s); A.setTension(s.round > s.stormRound ? 0.35 : 0); break;
@@ -422,7 +454,7 @@ export class GameUI {
         A.setTension(0.7); A.sfx('event');
         banner(`♛ ${t(`boss.${e.boss}`)}`, t(`epoch.${EPOCHS[e.island]}`) + ' · ' + name(e.player));
         R.effects.column(nodeTop(BOARD.islands[e.island].ids.g), '#ffb300');
-        await sleep(1200);
+        await this.pause(1200);
         break;
       case 'challengeStep': await this.showChallengeStep(e, s); break;
       case 'challengeResult':
@@ -433,7 +465,7 @@ export class GameUI {
           R.effects.burst(P.position(e.player), '#ffb300', 120, 10);
           R.effects.column(P.position(e.player), '#ffc83a');
         } else { A.sfx('wrong'); banner(t('ev.challengeLost'), name(e.player)); }
-        await sleep(1500);
+        await this.pause(1500);
         break;
       case 'bossBeatenAlready': toast(t('ev.bossBeaten', { name: name(e.player) })); break;
       case 'portalClosed': toast(t('ev.portalClosed', { name: name(e.player) })); break;
@@ -443,7 +475,7 @@ export class GameUI {
         const target = e.target != null ? name(e.target) : null;
         toast(target ? t('ev.cardTarget', { name: name(e.player), card: t(`card.${e.card}.name`), target }) : t('ev.card', { name: name(e.player), card: t(`card.${e.card}.name`) }), CARDS[e.card]?.kind === 'sabotage' ? 'bad' : 'gold');
         if (target != null && CARDS[e.card]?.kind === 'sabotage') R.effects.burst(P.position(e.target), '#ff5470', 50);
-        await sleep(350);
+        await this.pause(350);
         break;
       }
       case 'blocked': toast(t('ev.blocked', { name: name(e.player) }), 'good'); break;
@@ -463,14 +495,14 @@ export class GameUI {
         A.sfx('betray'); vibrate([80, 40, 80]);
         banner(t('ev.betrayal'), t('ev.betrayalSub', { name: name(e.player), victim: name(e.victim) }));
         R.effects.burst(P.position(e.player), '#ff3fb4', 80);
-        await sleep(1200);
+        await this.pause(1200);
         break;
       case 'fieldsRemoved':
         A.sfx('thunder');
         R.effects.lightning();
         e.nodes.forEach((n) => R.board.setRemoved(n, true));
         toast(t('ev.fieldsRemoved', { n: e.nodes.length }), 'bad');
-        await sleep(600);
+        await this.pause(600);
         break;
       case 'fieldsRepaired': e.nodes.forEach((n) => R.board.setRemoved(n, false)); toast(t('ev.fieldsRepaired', { n: e.nodes.length }), 'good'); break;
       case 'reshuffle': toast(t('ev.reshuffle')); break;
@@ -511,7 +543,7 @@ export class GameUI {
       clear(this.peekBox);
       this.peekBox.appendChild(card);
       setTimeout(() => card.remove(), 9000);
-      await sleep(700);
+      await this.pause(700);
     }
   }
 
@@ -585,7 +617,7 @@ export class GameUI {
       this.R.world.focusOn(mid, 80);
       B.showOptional(e.b);
       toast(t('ev.bridgeOpen'), 'gold');
-      await sleep(1800);
+      await this.pause(1800);
     } else if (e.kind === 'close') {
       const br = BOARD.bridges[e.island];
       B.setEdgeBlocked(br.from, br.node, true);
@@ -604,6 +636,16 @@ export class GameUI {
 
   showPeek(e, s) {
     modal({ title: t('ev.peekTitle', { name: pname(s, e.target) }), icon: '🕵', content: h('div', { class: 'hand' }, e.cards.length ? e.cards.map((c) => cardEl(c)) : h('div', { class: 'muted' }, t('ev.peekNone'))) });
+  }
+
+  // Würfelergebnis gut lesbar oben einblenden (Pasch hervorgehoben)
+  diceChip(e) {
+    document.querySelectorAll('.dice-chip').forEach((el) => el.remove());
+    const shown = e.values.join(' + ');
+    const text = e.tailwind ? t('dice.tailwind', { values: e.values.join(' · '), total: e.total }) : e.values.length > 2 ? `🎲 ${shown} = ${e.total}` : `🎲 ${shown} = ${e.total}`;
+    const chip = h('div', { class: `dice-chip ${e.doubles ? 'doubles' : ''}` }, e.doubles ? h('b', {}, t('dice.doubles'), ' ') : null, text);
+    UI().appendChild(chip);
+    setTimeout(() => chip.remove(), 2000 / (this.speed || 1));
   }
 
   // Kleiner Hinweis beim Betreten einer neuen Epoche

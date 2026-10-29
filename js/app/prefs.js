@@ -25,7 +25,11 @@ const DEFAULTS = {
   maxRounds: 30,
   topics: [...TOPICS],
   botSpeed: 'normal',
+  botLevel: 'normal',
   tutorialSeen: false,
+  bigText: false,
+  reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  seenQuestions: [],
 };
 
 function read(key) {

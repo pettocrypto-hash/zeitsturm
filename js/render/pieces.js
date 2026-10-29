@@ -84,6 +84,10 @@ export class Pieces {
       const ring = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.92, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, side: THREE.DoubleSide, toneMapped: false }));
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
       group.add(ring);
+      // Weicher Kontaktschatten – die Figur steht sichtbar auf dem Feld, auch ohne Echtzeitschatten
+      const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.05, 24), new THREE.MeshBasicMaterial({ map: glowTexture(), color: '#000000', transparent: true, opacity: 0.55, depthWrite: false }));
+      shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02;
+      group.add(shadow);
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
       halo.scale.set(4, 4, 1); halo.position.y = 1.2;
       group.add(halo);

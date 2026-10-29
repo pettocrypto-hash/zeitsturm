@@ -3,7 +3,7 @@ import { h, btn, clear, modal, stepper, seg, toast, tapFeedback, ask } from './d
 import { t } from '../i18n/index.js';
 import { TOPICS, TOPIC_INFO, EPOCHS, FIELD_INFO, PLAYER_COLORS } from '../core/constants.js';
 import { CARDS, CARD_KIND_ICON, MOTIONS } from '../core/content.js';
-import { BOARD, getQuestion, activeTopics, marketPrices, effectiveTopic, starColors } from '../core/engine.js';
+import { BOARD, getQuestion, activeTopics, marketPrices, effectiveTopic, starColors, projectLanding } from '../core/engine.js';
 import { renderQuestion, jokerCards } from './questions.js';
 import { playMinigame } from './minigames.js';
 
@@ -54,6 +54,27 @@ export function pathLabel(s, from, to) {
   return { icon: FIELD_INFO[n.type].icon, text: field };
 }
 
+// Kurzbeschreibung der Weg-Vorschau unter einer Wegoption
+function fieldName(s, id) {
+  const n = NODES[id];
+  return n.type === 'topic' ? `${TOPIC_INFO[effectiveTopic(s, id)].icon} ${t(`topic.${effectiveTopic(s, id)}`)}` : `${FIELD_INFO[n.type].icon} ${t(FIELD_INFO[n.type].key)}`;
+}
+function previewText(s, pid, pv) {
+  if (pv.kind === 'stop') return NODES[pv.node].type === 'hub' ? t('preview.win') : t('preview.guardian');
+  if (pv.kind === 'junction') return t('preview.junction', { n: pv.left });
+  if (s.mods.removed.includes(pv.node)) return t('preview.void');
+  if (NODES[pv.node].type === 'stream') return t('preview.stream');
+  return t('preview.land', { field: fieldName(s, pv.node) });
+}
+// Kurzform für kompakte Buttons (z. B. sechs Wege am Zeitportal)
+function previewIcon(s, pv) {
+  if (pv.kind === 'stop') return NODES[pv.node].type === 'hub' ? '🏁' : '♛';
+  if (pv.kind === 'junction') return '🔀';
+  if (s.mods.removed.includes(pv.node)) return '✖';
+  const n = NODES[pv.node];
+  return n.type === 'topic' ? TOPIC_INFO[effectiveTopic(s, pv.node)].icon : FIELD_INFO[n.type].icon;
+}
+
 const WAIT_KEYS = { turn: 'wait.turn', path: 'wait.path', quiz: 'wait.quiz', reward: 'wait.reward', duelSetup: 'wait.duelSetup', duel: 'wait.duel', motion: 'wait.motion', vote: 'wait.vote', concert: 'wait.concert', market: 'wait.market', portal: 'wait.portal', challenge: 'wait.challenge', post: 'wait.post', trade: 'wait.trade', allianceReq: 'wait.alliance', moving: 'wait.turn' };
 
 export function waitingPanel(s, actors) {
@@ -95,13 +116,19 @@ const PANELS = {
   },
 
   path({ s, pd, act, ui }) {
-    ui.highlightPath(pd.options);
+    // Weg-Vorschau: Wo würde die Figur mit den restlichen Schritten landen?
+    const previews = pd.options.map((o) => projectLanding(s, pd.player, o, pd.steps));
+    ui.highlightPath(pd.options, previews.filter((pv) => pv.kind === 'land' || pv.kind === 'stop').map((pv) => pv.node));
+    const compact = pd.options.length > 3;
     return h('div', { class: 'dock-card' },
       h('div', { class: 'dock-title' }, '🔀 ', t('path.title')),
       h('div', { class: 'muted small' }, t('path.hint', { n: pd.steps })),
-      h('div', { class: pd.options.length > 3 ? 'grid2' : 'col' }, pd.options.map((o) => {
+      h('div', { class: compact ? 'grid2' : 'col' }, pd.options.map((o, i) => {
         const L = pathLabel(s, s.players[pd.player].pos, o);
-        return btn([h('span', { class: 'ico' }, L.icon), L.text], () => { ui.clearPath(); act({ type: 'choosePath', node: o }); }, pd.options.length > 3 ? 'small' : 'block');
+        return btn(h('span', { class: 'path-btn' },
+          h('span', { class: 'path-main' }, h('span', { class: 'ico' }, L.icon), ' ', L.text),
+          h('span', { class: 'path-sub' }, compact ? `→ ${previewIcon(s, previews[i])}` : previewText(s, pd.player, previews[i]))),
+        () => { ui.clearPath(); act({ type: 'choosePath', node: o }); }, compact ? 'small' : 'block path-option');
       })));
   },
 

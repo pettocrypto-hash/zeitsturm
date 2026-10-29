@@ -67,4 +67,15 @@ export default makeBank('geo', [
   mat(2, -1, 'Ordne jedem Fluss die Hauptstadt zu, durch die er fließt:', [['Themse', 'London'], ['Tiber', 'Rom'], ['Moldau', 'Prag'], ['Spree', 'Berlin']], 'Viele Hauptstädte entstanden an Flüssen.'),
   mat(1, -1, 'Ordne jedem Tier seinen typischen Lebensraum zu:', [['Dromedar', 'Wüste'], ['Kaiserpinguin', 'Antarktis'], ['Orang-Utan', 'Regenwald'], ['Lama', 'Anden']], 'Tiere sind an ihre Lebensräume angepasst.'),
   mat(2, -1, 'Ordne jedes Wahrzeichen seinem Land zu:', [['Taj Mahal', 'Indien'], ['Cristo Redentor', 'Brasilien'], ['Petra', 'Jordanien'], ['Uluru', 'Australien']], 'Alle vier sind Teil des UNESCO-Welterbes bzw. liegen in Welterbestätten.'),
+  // Ergänzung Version 2.1
+  mc(1, -1, 'Was ist die Hauptstadt von Italien?', ['Rom', 'Mailand', 'Neapel', 'Turin'], 'Rom ist seit 1871 Hauptstadt des geeinten Italiens.'),
+  mc(1, -1, 'Was ist die Hauptstadt von Norwegen?', ['Oslo', 'Bergen', 'Stavanger', 'Trondheim'], 'Oslo liegt am Ende des Oslofjords.'),
+  mc(1, -1, 'Welcher große Fluss fließt durch Ägypten?', ['Nil', 'Niger', 'Kongo', 'Sambesi'], 'Fast alle Ägypterinnen und Ägypter leben im Niltal und im Nildelta.'),
+  mc(1, -1, 'Welches Gebirge erstreckt sich unter anderem über Frankreich, die Schweiz, Italien, Österreich und Deutschland?', ['Alpen', 'Pyrenäen', 'Apenninen', 'Karpaten'], 'Die Alpen sind das höchste Gebirge, das vollständig in Europa liegt.'),
+  mc(1, -1, 'Welches Meer liegt zwischen Europa und Afrika?', ['Mittelmeer', 'Nordsee', 'Rotes Meer', 'Schwarzes Meer'], 'Über die Straße von Gibraltar ist es mit dem Atlantik verbunden.'),
+  mc(2, -1, 'Welches Beuteltier lebt in Australien und frisst fast ausschließlich Eukalyptusblätter?', ['Koala', 'Wombat', 'Känguru', 'Opossum'], 'Koalas schlafen bis zu 20 Stunden am Tag, um Energie zu sparen.'),
+  mc(2, -1, 'Wie heißt die gedachte Linie im Pazifik, an der das Kalenderdatum wechselt?', ['Datumsgrenze', 'Äquator', 'Nullmeridian', 'Wendekreis des Krebses'], 'Sie verläuft ungefähr entlang des 180. Längengrads.'),
+  tf(2, -1, 'Der größte Teil des Amazonas-Regenwaldes liegt in Brasilien.', true, 'Rund 60 % des Regenwaldes liegen auf brasilianischem Gebiet.'),
+  tf(2, -1, 'Der Mount Everest liegt an der Grenze zwischen Nepal und China.', true, 'Der Gipfel liegt auf der Grenze zu Tibet, das zu China gehört.'),
+  est(2, -1, 'Wie viele Zeitzonen hat Russland (Stand 2025)?', 11, 1, 'Zeitzonen', 'Russland erstreckt sich über 11 Zeitzonen von Kaliningrad bis Kamtschatka.'),
 ]);
