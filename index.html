@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>ZEITSTURM</title>
+  <meta name="description" content="ZEITSTURM – das 3D-Gesellschaftsspiel um die Zeitlinie. Online mit Freunden oder am selben Handy.">
+  <meta name="theme-color" content="#05060f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ZEITSTURM">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
+</head>
+<body>
+  <canvas id="world" aria-label="3D-Spielbrett"></canvas>
+  <div id="ui"></div>
+  <div id="boot" class="boot">
+    <div class="boot-logo">ZEITSTURM</div>
+    <div class="boot-ring"></div>
+    <div class="boot-text" id="boot-text">Zeitlinie wird geladen …</div>
+  </div>
+  <noscript><p style="color:#fff;padding:24px">ZEITSTURM benötigt JavaScript.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Abhängigkeiten und Laufzeitdateien (das Projekt selbst braucht keine)
+node_modules/
+*.log
+
+# Betriebssystem & Editoren
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Lokale Werkzeug-Konfiguration
+.claude/
